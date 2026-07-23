@@ -92,10 +92,13 @@ export function Thumbnail() {
           gap: 14,
         }}
       >
-        <span style={{ width: 18, height: 22, background: tone, display: 'block' }} />
+        {/* Der Farbpunkt ist die Sortenkennung. Er muss in der YouTube-Kachel
+            bei etwa 320 px Breite noch als Punkt erkennbar sein, deshalb
+            deutlich größer als reine Typo-Logik verlangen würde. */}
+        <span style={{ width: 26, height: 30, background: tone, display: 'block' }} />
         <span
           style={{
-            font: '900 26px var(--font-ui)',
+            font: '900 30px var(--font-ui)',
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
             color: tone,
