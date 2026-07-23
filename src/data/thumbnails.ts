@@ -55,7 +55,7 @@ export const THUMB_TEMPLATES: Record<ThumbTemplate, ThumbConfig> = {
     key: 'signal',
     marker: 'Breaking Signal',
     markerTone: 'orange',
-    headline: 'Das Modell ist nicht das Produkt',
+    headline: 'Das Modell ist nicht das Produkt.',
     layout: 'typo',
   },
 }

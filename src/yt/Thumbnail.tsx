@@ -106,7 +106,20 @@ export function Thumbnail() {
       </div>
 
       {/* Headline */}
-      <div style={{ position: 'absolute', left: 56, top: 148, width: textWidth }}>
+      {/* Textblock optisch mittig zwischen Marker und Fußzeile: kurze Headlines
+          kleben dadurch nicht oben, lange laufen nach unten aus. */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 56,
+          top: 130,
+          bottom: 130,
+          width: textWidth,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}
+      >
         <h1
           className="display"
           style={{

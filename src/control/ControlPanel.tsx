@@ -153,6 +153,13 @@ export function ControlPanel() {
           <Text label="Segment-Label (z. B. SIGNAL 01)" value={state.segmentLabel} onChange={set('segmentLabel')} />
           <Text label="Segmenttitel" value={state.segmentTitle} onChange={set('segmentTitle')} />
           <Text label="Standby-Thema" value={state.standbyTopic} onChange={set('standbyTopic')} />
+          <Field label="Ablauf · eine Zeile je Segment: LABEL · Titel">
+            <textarea
+              style={{ ...field, minHeight: 104, resize: 'vertical', lineHeight: 1.5 }}
+              value={state.rundown}
+              onChange={(e) => update({ rundown: e.target.value })}
+            />
+          </Field>
           <Text label="Nächste Folge (Endkarte)" value={state.nextShowText} onChange={set('nextShowText')} />
           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             <Toggle label="Live" value={state.isLive} onChange={(v) => update({ isLive: v })} accent />
