@@ -1,0 +1,92 @@
+@import './tokens.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* Overlay-Grundzustand: transparent für OBS.
+   Szenen mit Vollbildkarte setzen ihren Hintergrund selbst. */
+body {
+  background: transparent;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Im Sendebild: kein Cursor, keine Fokusrahmen, keine Auswahl */
+.broadcast,
+.broadcast * {
+  cursor: none !important;
+  user-select: none;
+  outline: none !important;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Wiederkehrende Grundbausteine ---- */
+
+.kicker {
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: var(--type-status);
+  letter-spacing: var(--tracking-meta);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.kicker--red { color: var(--live-red); }
+.kicker--orange { color: var(--signal-orange); }
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: var(--leading-display);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.meta {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--type-meta);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hairline {
+  height: var(--line-hair);
+  background: var(--border-subtle);
+}
+
+/* Der Baustein: rotes Quadrat = kleinster Build-Baustein + Blinkcursor */
+.block {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.78em;
+  background: var(--live-red);
+  vertical-align: baseline;
+  transform: translateY(0.06em);
+}
+
+.block--blink {
+  animation: block-blink 1.2s steps(1) infinite;
+}
+
+@keyframes block-blink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0; }
+}

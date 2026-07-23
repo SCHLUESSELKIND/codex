@@ -1,0 +1,78 @@
+/* ============================================================
+   BUILD ON PURPOSE · Design-Tokens
+   Leitidee: OPERATIONAL INTELLIGENCE
+   Regel: Rot = LIVE/Aktion. Orange = ZehnX-Herkunft, nur als
+   Datenpunkt. Nie beide großflächig gleichzeitig.
+   ============================================================ */
+
+:root {
+  /* ---- Farbe ---- */
+  --bg-primary: #060606;
+  --bg-elevated: #0c0c0d;
+  --surface: #121214;
+  --border-subtle: rgba(244, 244, 241, 0.12);
+  --border-strong: rgba(244, 244, 241, 0.28);
+
+  --text-primary: #f4f4f1;
+  --text-secondary: #a7a7a0;
+  --text-muted: #62625c;
+
+  --live-red: #ff2b2b;
+  --live-red-dim: rgba(255, 43, 43, 0.16);
+  --signal-orange: #f57b1f; /* ZehnX-Herkunftsakzent, sehr sparsam */
+  --success: #2fbf71;
+  --warning: #ffb020;
+  --inactive: #3a3a36;
+
+  /* ---- Typografie ---- */
+  --font-display: 'Archivo Black', 'Arial Black', sans-serif;
+  --font-ui: 'Inter Variable', 'Inter', 'Helvetica Neue', sans-serif;
+
+  /* Skala, bezogen auf die 1920x1080-Stage */
+  --type-display: 176px;      /* Standby, Statement */
+  --type-episode: 96px;       /* Episodentitel, Themenkarte */
+  --type-thumb: 132px;        /* Thumbnail-Hauptwort (auf 1280x720) */
+  --type-segment: 64px;       /* Segmenttitel */
+  --type-lower-name: 42px;    /* Lower Third Zeile 1 */
+  --type-lower-sub: 22px;     /* Lower Third Zeile 2 */
+  --type-meta: 18px;          /* Metadaten, Koordinaten */
+  --type-status: 16px;        /* Statusanzeigen, Chips */
+  --type-body: 24px;          /* Fließtext auf Karten */
+  --type-label: 13px;         /* UI-Labels im Control Panel */
+
+  --tracking-wide: 0.14em;
+  --tracking-meta: 0.22em;
+  --leading-display: 0.92;
+  --leading-body: 1.4;
+
+  /* ---- Raum (4px-Basis) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* Stage-Safe-Area: 5 % Action Safe auf 1920x1080 */
+  --safe-x: 96px;
+  --safe-y: 54px;
+
+  /* ---- Linien, Radien, Opazität ---- */
+  --line-hair: 1px;
+  --line-strong: 2px;
+  --line-accent: 4px; /* rote Aktivkante */
+  --radius-ui: 2px;   /* nur funktionale UI-Elemente, Sendegrafik bleibt kantig */
+  --opacity-grid: 0.10;
+  --opacity-ghost: 0.35;
+
+  /* ---- Motion ---- */
+  --motion-micro: 150ms;
+  --motion-reveal: 300ms;
+  --motion-segment: 550ms;
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);      /* einrasten */
+  --ease-scan: cubic-bezier(0.65, 0, 0.35, 1);  /* Scan-Bewegung */
+}

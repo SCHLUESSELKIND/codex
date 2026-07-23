@@ -1,0 +1,60 @@
+/* Motion-Vokabular: System aktiviert sich, Module rasten ein.
+   Kein Bounce, keine Glitches, kein Dauerloop außer LIVE-Puls
+   und dem langsamen Standby-Scan. */
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Maskiertes Text-Reveal von unten */
+@keyframes reveal-up {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(18px);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+  }
+}
+
+.reveal-up {
+  animation: reveal-up var(--motion-segment) var(--ease-snap) both;
+}
+
+.reveal-up--d1 { animation-delay: 90ms; }
+.reveal-up--d2 { animation-delay: 180ms; }
+.reveal-up--d3 { animation-delay: 270ms; }
+
+/* Horizontaler Linien-Reveal */
+@keyframes draw-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.draw-x {
+  transform-origin: left center;
+  animation: draw-x var(--motion-segment) var(--ease-snap) both;
+  animation-delay: 200ms;
+}
+
+/* Standby-Ambient: eine feine Scanlinie wandert alle 24 s durchs Bild */
+@keyframes scan-y {
+  0% { transform: translateY(-2px); opacity: 0; }
+  4% { opacity: 1; }
+  46% { opacity: 1; }
+  50% { transform: translateY(1080px); opacity: 0; }
+  100% { transform: translateY(1080px); opacity: 0; }
+}
+
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 244, 241, 0.22), transparent);
+  animation: scan-y 24s var(--ease-scan) infinite;
+  pointer-events: none;
+}
