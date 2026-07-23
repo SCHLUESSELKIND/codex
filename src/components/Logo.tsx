@@ -44,10 +44,11 @@ export function WordmarkStacked({ size = 96, blink = false, style }: WordmarkPro
 export function WordmarkHorizontal({ size = 32, blink = false, style }: WordmarkProps) {
   return (
     <div
-      style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.38, whiteSpace: 'nowrap', ...style }}
+      style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.4, whiteSpace: 'nowrap', ...style }}
     >
       <span className="display" style={{ fontSize: size }}>
         BUILD
+        <span className={`block${blink ? ' block--blink' : ''}`} style={{ marginLeft: '0.09em' }} />
       </span>
       <span
         style={{
@@ -60,7 +61,6 @@ export function WordmarkHorizontal({ size = 32, blink = false, style }: Wordmark
       >
         ON PURPOSE
       </span>
-      <span className={`block${blink ? ' block--blink' : ''}`} style={{ fontSize: size * 0.62 }} />
     </div>
   )
 }
@@ -108,9 +108,10 @@ export function LiveBadge({ size = 18, live = true }: { size?: number; live?: bo
         display: 'inline-flex',
         alignItems: 'center',
         gap: size * 0.55,
-        background: live ? 'var(--live-red)' : 'var(--inactive)',
-        color: live ? '#0a0202' : 'var(--text-secondary)',
-        padding: `${size * 0.42}px ${size * 0.75}px`,
+        background: live ? 'var(--live-red)' : 'transparent',
+        border: live ? 'none' : 'var(--line-hair) solid var(--border-strong)',
+        color: live ? '#0a0202' : 'var(--text-muted)',
+        padding: live ? `${size * 0.42}px ${size * 0.75}px` : `${size * 0.42 - 1}px ${size * 0.75 - 1}px`,
         fontFamily: 'var(--font-ui)',
         fontWeight: 900,
         fontSize: size,

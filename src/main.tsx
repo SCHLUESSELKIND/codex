@@ -19,6 +19,8 @@ import { Break } from './scenes/Break'
 import { End } from './scenes/End'
 import { Technical } from './scenes/Technical'
 import { ControlPanel } from './control/ControlPanel'
+import { SafeScene } from './components/SafeScene'
+import { Preview } from './scenes/Preview'
 import { Banner } from './yt/Banner'
 import { Avatar } from './yt/Avatar'
 import { Thumbnail } from './yt/Thumbnail'
@@ -28,6 +30,7 @@ import { Social } from './yt/Social'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <HashRouter>
+      <SafeScene>
       <Routes>
         <Route path="/" element={<Navigate to="/control" replace />} />
         {/* OBS-Views */}
@@ -43,6 +46,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/technical" element={<Technical />} />
         {/* Regie */}
         <Route path="/control" element={<ControlPanel />} />
+        {/* Abnahme: Overlay über simuliertem Videobild */}
+        <Route path="/preview/:scene" element={<Preview />} />
         {/* YouTube-Export-Vorlagen */}
         <Route path="/yt/banner" element={<Banner />} />
         <Route path="/yt/avatar" element={<Avatar />} />
@@ -50,6 +55,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/yt/endscreen" element={<Endscreen />} />
         <Route path="/social/:format" element={<Social />} />
       </Routes>
+      </SafeScene>
     </HashRouter>
   </React.StrictMode>,
 )

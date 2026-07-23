@@ -49,6 +49,8 @@ export interface ShowState {
   isLive: boolean
   standbyTopic: string
   nextShowText: string
+  /** Sendeablauf, eine Zeile je Segment im Format "LABEL · Titel" */
+  rundown: string
 
   showLogo: boolean
   showLiveBadge: boolean
@@ -87,6 +89,12 @@ export const DEFAULT_STATE: ShowState = {
   isLive: true,
   standbyTopic: 'Heute: KI-Agenten, die den Posteingang wirklich sortieren',
   nextShowText: 'Nächste Folge · Donnerstag · 19:00 Uhr',
+  rundown: [
+    'SIGNAL 01 · Was diese Woche wirklich zählt',
+    'BUILD 02 · Triage-Agent mit Eval-Gate',
+    'TEST 03 · Läuft das im Mittelstand?',
+    'Q&A 04 · Eure Fragen',
+  ].join('\n'),
 
   showLogo: true,
   showLiveBadge: true,
@@ -98,6 +106,25 @@ export const DEFAULT_STATE: ShowState = {
 
 export const STORAGE_KEY = 'bop.show.v1'
 export const CHANNEL_NAME = 'bop-show-sync'
+
+export interface RundownItem {
+  label: string
+  title: string
+}
+
+/** "SIGNAL 01 · Titel" je Zeile → strukturierte Liste. Leere Zeilen fallen raus.
+ *  Defensiv: ein alter oder kaputter State darf nie eine Sendegrafik killen. */
+export function parseRundown(raw: string | undefined): RundownItem[] {
+  if (typeof raw !== 'string') return []
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [label, ...rest] = line.split('·')
+      return { label: label.trim(), title: rest.join('·').trim() }
+    })
+}
 
 export function loadState(): ShowState {
   try {

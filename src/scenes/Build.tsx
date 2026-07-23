@@ -23,7 +23,7 @@ export function Build() {
         style={{
           position: 'absolute',
           right: 'var(--safe-x)',
-          bottom: 'calc(var(--safe-y) + 44px)',
+          bottom: 'calc(var(--safe-y) + 96px)',
           width: PIP_W,
           height: PIP_H,
         }}
@@ -72,10 +72,10 @@ export function Build() {
           background: 'var(--bg-primary)',
           border: 'var(--line-hair) solid var(--border-subtle)',
           borderLeft: 'var(--line-accent) solid var(--live-red)',
-          padding: 'var(--space-4) var(--space-6)',
+          padding: 'var(--space-3) var(--space-6)',
           display: 'flex',
           alignItems: 'center',
-          gap: 'var(--space-8)',
+          gap: 'var(--space-6)',
           boxShadow: '0 4px 32px rgba(0,0,0,0.55)',
         }}
       >

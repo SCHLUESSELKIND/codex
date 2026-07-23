@@ -29,16 +29,30 @@ export function Banner() {
         }}
       />
 
-      {/* Datenmarken am oberen und unteren Rand (nur auf TV/Desktop sichtbar) */}
-      <div style={{ position: 'absolute', top: 120, left: 160, right: 160, display: 'flex', gap: 28 }}>
-        {Array.from({ length: 24 }, (_, i) => (
+      {/* Folgen-Lineal: ein Strich je Folge, jede sechste betont.
+          Dockt direkt an die Safe Area an, damit es Teil der Komposition ist
+          und nicht als freier Zierstreifen im Bild schwebt.
+          Auf dem Smartphone liegt es außerhalb des Ausschnitts, dort trägt
+          allein die Safe Area die Botschaft. */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 428,
+          left: 507,
+          width: 1546,
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 22,
+          height: 26,
+        }}
+      >
+        {Array.from({ length: 26 }, (_, i) => (
           <div
             key={i}
             style={{
               flex: 1,
-              height: i % 6 === 0 ? 26 : 12,
+              height: i % 6 === 0 ? 26 : 10,
               background: i % 6 === 0 ? 'var(--signal-orange)' : 'var(--border-subtle)',
-              opacity: i % 6 === 0 ? 0.9 : 1,
             }}
           />
         ))}
@@ -56,6 +70,7 @@ export function Banner() {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 80,
+          padding: '0 28px',
         }}
       >
         <div>

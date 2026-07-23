@@ -34,7 +34,22 @@ export function Thumbnail() {
   const tone = TONE[config.markerTone]
 
   const isTypo = config.layout === 'typo'
-  const textWidth = isTypo ? 1120 : 700
+  // 44 px Luft zur Portraitzone (beginnt bei x=760), damit die Headline
+  // auch bei einem echten Freisteller nie an der Schulter klebt.
+  const textWidth = isTypo ? 1120 : 660
+
+  // Schriftgröße nach Textlänge staffeln: maximal drei Zeilen, sonst
+  // bricht die Lesbarkeit in der YouTube-Seitenleiste weg.
+  const len = headline.length
+  const headlineSize = isTypo
+    ? len > 34
+      ? 108
+      : 132
+    : len > 30
+      ? 78
+      : len > 20
+        ? 88
+        : 104
 
   return (
     <Stage width={1280} height={720} solid>
@@ -54,19 +69,8 @@ export function Thumbnail() {
       {!isTypo && (
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 520 }}>
           <PortraitSlot src="portraits/tom-thumb.png" width={520} height={720} />
-          {/* Harte Kante links vom Portrait, trennt Text und Bild sauber */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 3,
-              background: 'var(--text-primary)',
-              opacity: 0.9,
-            }}
-          />
-          {/* Abdunkler zur Textzone: hält die Headline auch bei hellem Portrait lesbar */}
+          {/* Abdunkler zur Textzone: hält die Headline auch bei hellem Portrait
+              lesbar. Keine harte Trennkante, damit Freisteller frei stehen. */}
           <div
             style={{
               position: 'absolute',
@@ -102,11 +106,11 @@ export function Thumbnail() {
       </div>
 
       {/* Headline */}
-      <div style={{ position: 'absolute', left: 56, top: 150, width: textWidth }}>
+      <div style={{ position: 'absolute', left: 56, top: 148, width: textWidth }}>
         <h1
           className="display"
           style={{
-            fontSize: isTypo ? 128 : 96,
+            fontSize: headlineSize,
             lineHeight: 0.94,
             textWrap: 'balance',
           }}

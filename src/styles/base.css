@@ -72,21 +72,25 @@ body {
   background: var(--border-subtle);
 }
 
-/* Der Baustein: rotes Quadrat = kleinster Build-Baustein + Blinkcursor */
+/* Der Baustein: roter Balken auf der Baseline = kleinster Build-Schritt
+   und zugleich Cursor. Breite bewusst schlank, Höhe exakt Versalhöhe
+   von Archivo Black, damit er als Teil des Wortes liest. */
 .block {
   display: inline-block;
-  width: 0.62em;
-  height: 0.78em;
+  width: 0.3em;
+  height: 0.72em;
   background: var(--live-red);
   vertical-align: baseline;
-  transform: translateY(0.06em);
 }
 
+/* Der Baustein im Wordmark blinkt NICHT. Er ist Teil der Marke und muss auf
+   jedem Standbild vollständig sein. Bewegung bleibt dem LIVE-Indikator
+   vorbehalten. Das Modifier bleibt als sehr flacher Atem für Sonderfälle. */
 .block--blink {
-  animation: block-blink 1.2s steps(1) infinite;
+  animation: block-breathe 2.4s ease-in-out infinite;
 }
 
-@keyframes block-blink {
-  0%, 60% { opacity: 1; }
-  61%, 100% { opacity: 0; }
+@keyframes block-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
 }
