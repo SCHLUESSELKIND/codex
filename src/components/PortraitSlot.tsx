@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 /*
   Austauschbares Bildmodul. Lädt public/portraits/<name>.png, wenn vorhanden.
-  Fehlt die Datei, erscheint ein klar markierter Platzhalter — kein erfundenes
+  Fehlt die Datei, erscheint ein klar markierter Platzhalter, kein erfundenes
   Gesicht, kein Stockbild. Bildbehandlung laut docs/DESIGN_SYSTEM.md:
   Freisteller auf Dunkel, Kantenlicht von links, dezente Körnung.
 */

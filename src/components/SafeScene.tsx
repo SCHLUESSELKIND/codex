@@ -3,7 +3,7 @@ import { Component, type ReactNode } from 'react'
 /*
   Sendesicherheit: Ein Renderfehler darf im Livebetrieb nie ein weißes Bild
   erzeugen. Die Boundary fängt ab und liefert einen transparenten,
-  stummen Zustand — das Videobild bleibt sichtbar, das Overlay verschwindet
+  stummen Zustand. Das Videobild bleibt sichtbar, das Overlay verschwindet
   einfach. Die Ursache steht in der Konsole.
 */
 
