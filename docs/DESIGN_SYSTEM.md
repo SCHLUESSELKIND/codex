@@ -150,6 +150,21 @@ Diese Leere ist der Unterschied zwischen einer Sendung und einem Stream-Overlay.
 - Raster als Textur: `linear-gradient`-Gitter mit 5 bis 5.5 % Weiß, Zellgröße 80 px
   (Thumbnail), 108 px (Social), 160 px (Banner). Immer mit Maske abgeschwächt.
 
+### Lesbarkeit über unbekanntem Videobild
+
+Overlays liegen über Material, das niemand vorher kennt: helles Studio, weiße Website,
+dunkler Editor. Zwei Mittel sichern die Marke, ohne einen Rahmen zu bauen:
+
+- **Scrim** in der Kopfzeile · Verlauf von `rgba(6,6,6,0.58)` auf transparent über 210 px.
+  Über einem strukturierten Kamerabild praktisch unsichtbar, über weißer Wand rettet er
+  die helle Wortmarke. Kein Kasten, keine Kante.
+- **Sender-Bug auf Platte** in der Screen-Szene · das Monogramm sitzt auf einer eigenen
+  dunklen Fläche, weil darunter genauso gut eine weiße Website liegen kann.
+
+Getestet gegen: dunkles Studio, helle Wand, dunkler Code-Editor, weiße Website,
+unruhiger Verlauf. Ebenso gegen harte Kompression (JPEG-Qualität 8 auf 720p):
+rote Kicker, Haarlinien und Raster bleiben stabil.
+
 ---
 
 ## 7. Statusanzeigen und Datenmarken

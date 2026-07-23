@@ -89,6 +89,11 @@ export function Social() {
   const long = dim.h >= 1350
   const headlineSize = headline.length > 46 ? (long ? 76 : 64) : long ? 104 : 88
 
+  // Der Textblock sitzt im unteren Drittel, aber nie am Rand. Bei 9:16 muss er
+  // deutlich höher stehen, sonst bleibt die obere Bildhälfte tot und die
+  // Instagram-Oberfläche überlagert den Text.
+  const blockBottom = dim.h >= 1920 ? 700 : dim.h >= 1350 ? 340 : pad + 190
+
   return (
     <Stage width={dim.w} height={dim.h} solid>
       <div
@@ -118,7 +123,7 @@ export function Social() {
       </div>
 
       {/* Headline-Block, optisch auf der unteren Drittellinie verankert */}
-      <div style={{ position: 'absolute', left: pad, right: pad, bottom: pad + 190 }}>
+      <div style={{ position: 'absolute', left: pad, right: pad, bottom: blockBottom }}>
         <h1 className="display" style={{ fontSize: headlineSize, lineHeight: 0.95, textWrap: 'balance' }}>
           {headline}
         </h1>

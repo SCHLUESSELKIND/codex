@@ -6,6 +6,21 @@ import type { ShowState } from '../state/showState'
 export function TopBar({ state, segment }: { state: ShowState; segment?: string }) {
   return (
     <>
+      {/* Scrim statt Rahmen: sichert die Lesbarkeit der hellen Marke, wenn
+          darunter ein helles Videobild liegt (weiße Wand, helle Website).
+          Kein Kasten, keine Kante, das Bild bleibt offen. */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 210,
+          background:
+            'linear-gradient(180deg, rgba(6,6,6,0.58) 0%, rgba(6,6,6,0.26) 42%, rgba(6,6,6,0) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
       <div
         style={{
           position: 'absolute',

@@ -17,7 +17,22 @@ export function Screen() {
           gap: 'var(--space-4)',
         }}
       >
-        {state.showLogo && <Monogram size={30} />}
+        {/* Sender-Bug auf eigener Platte: die Screen-Szene liegt über beliebigem
+            Inhalt, von dunklem Editor bis weißer Website. Ohne Träger
+            verschwindet die helle Marke im hellen Untergrund. */}
+        {state.showLogo && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'var(--bg-primary)',
+              border: 'var(--line-hair) solid var(--border-subtle)',
+              padding: '8px 12px',
+            }}
+          >
+            <Monogram size={26} />
+          </span>
+        )}
         {state.showLiveBadge && <LiveBadge size={14} live={state.isLive} />}
       </div>
       {state.showSegment && state.segmentLabel && (
