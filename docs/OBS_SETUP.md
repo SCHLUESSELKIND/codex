@@ -25,7 +25,47 @@ Die läuft auf `http://localhost:4173` und hat keinen Dev-Server-Overhead und ke
 
 ---
 
-## 2. Browser-Sources anlegen
+## 2a. Automatisch einrichten (empfohlen)
+
+Bei laufendem OBS und laufendem Dev-Server richtet ein Befehl alles ein:
+
+```bash
+npm run obs:setup
+```
+
+Das Skript spricht obs-websocket an und **ergänzt nur**. Es löscht und benennt nie
+etwas um. Es legt die fünf Overlay-Quellen in den bestehenden Szenen `01 Standby`
+bis `04 Nur Screen` an, erstellt die Karten-Szenen `05` bis `09` und richtet den
+Kamera-PiP in der Build-Szene millimetergenau aus.
+
+Vorher ansehen, ohne etwas zu ändern:
+
+```bash
+npm run obs:setup -- --dry
+```
+
+Auf den Produktions-Server umstellen (erneut ausführen aktualisiert nur die URLs):
+
+```bash
+npm run obs:setup -- --base=http://localhost:4173
+```
+
+Prüfen, ob alles in OBS wirklich rendert:
+
+```bash
+npm run obs:verify -- --out=/tmp/obs-check
+```
+
+Der Test schaltet dafür kurz durch die reinen Kartenszenen und danach zurück.
+Er fasst bewusst keine Szene mit Kamera oder Bildschirmfreigabe an, damit kein
+geteilter Bildschirminhalt in einem Prüfbild landet. Läuft Stream oder Aufnahme,
+bricht er ab, ohne etwas umzuschalten.
+
+Voraussetzung: In OBS unter `Werkzeuge → WebSocket-Servereinstellungen` muss der
+Server aktiviert sein. Das Passwort liest das Skript selbst aus der lokalen
+OBS-Konfiguration, es muss nirgends eingetragen werden.
+
+## 2b. Browser-Sources von Hand anlegen
 
 Für jede Quelle in OBS: `+ → Browserquelle`, Breite **1920**, Höhe **1080**.
 
