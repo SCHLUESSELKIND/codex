@@ -1,6 +1,6 @@
 # BUILD ON PURPOSE
 
-Design- und Broadcast-System der wöchentlichen KI-Live-Show von Thomas Frerich.
+Design- und Broadcast-System der zweiwöchentlichen KI-Live-Show von Thomas Frerich.
 
 > Ich baue KI, die im echten Arbeitsalltag funktioniert. Live, ehrlich, mit Absicht.
 > Kein Hype, keine Buzzwords.

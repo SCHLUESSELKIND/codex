@@ -56,14 +56,16 @@ export function Endscreen() {
       </div>
 
       <div style={{ position: 'absolute', left: 'var(--safe-x)', top: 190, width: 660 }}>
+        {/* Bewusst ohne Wochenangabe: der Endscreen liegt unter jeder Folge und
+            darf nicht veralten, wenn eine Ausgabe verschoben wird. */}
         <div className="display" style={{ fontSize: 82, lineHeight: 0.94 }}>
-          Nächste Woche
+          In zwei Wochen
           <br />
           wieder live
         </div>
         <div className="hairline" style={{ margin: '36px 0', width: 340 }} />
         <div style={{ display: 'grid', gap: 14 }}>
-          <span style={{ font: '800 26px var(--font-ui)' }}>Donnerstag · 19:00 Uhr</span>
+          <span style={{ font: '800 26px var(--font-ui)' }}>Donnerstags · 19:00 Uhr</span>
           <span style={{ font: '500 22px var(--font-ui)', color: 'var(--text-secondary)' }}>
             Abonnieren und nichts verpassen
           </span>

@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { useShowState } from '../hooks/useShowState'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useShowState, useRegieSync } from '../hooks/useShowState'
 import { LOWER_THIRD_KICKER, type LowerThirdVariant, type ShowState } from '../state/showState'
 
 // Regie-Panel: steuert alle Views live, ohne Codeänderung.
@@ -46,6 +46,58 @@ function Text({
     <Field label={label}>
       <input style={field} value={value} onChange={(e) => onChange(e.target.value)} />
     </Field>
+  )
+}
+
+/*
+  Zahlenfeld mit lokalem Zwischenstand.
+
+  Ein direkt geklemmtes Feld (Math.max beim Tippen) macht das Leeren unmöglich:
+  aus einem leeren Feld wird sofort "1", und wer danach 15 tippt, landet bei 115.
+  Deshalb hält die Eingabe ihren Rohtext, gemeldet wird nur ein gültiger Wert,
+  und die Grenzen greifen beim Verlassen des Feldes.
+*/
+function NumberInput({
+  value,
+  min,
+  max,
+  onCommit,
+}: {
+  value: number
+  min: number
+  max: number
+  onCommit: (v: number) => void
+}) {
+  const [roh, setRoh] = useState<string | null>(null)
+  const angezeigt = roh ?? String(value)
+
+  const klemmen = (text: string) => {
+    const zahl = Number(text)
+    if (text.trim() === '' || Number.isNaN(zahl)) return value
+    return Math.min(max, Math.max(min, Math.round(zahl)))
+  }
+
+  return (
+    <input
+      type="number"
+      min={min}
+      max={max}
+      style={field}
+      value={angezeigt}
+      onChange={(e) => {
+        setRoh(e.target.value)
+        const zahl = Number(e.target.value)
+        // Nur übernehmen, wenn die Eingabe schon im gültigen Bereich liegt.
+        // Zwischenstände wie "" oder "1" auf dem Weg zu "15" bleiben lokal.
+        if (e.target.value.trim() !== '' && !Number.isNaN(zahl) && zahl >= min && zahl <= max) {
+          onCommit(Math.round(zahl))
+        }
+      }}
+      onBlur={(e) => {
+        onCommit(klemmen(e.target.value))
+        setRoh(null)
+      }}
+    />
   )
 }
 
@@ -119,6 +171,9 @@ const VIEWS = [
 export function ControlPanel() {
   const [state, update, reset] = useShowState()
 
+  // Frisch gestarteter Server bekommt einmalig den lokal gespeicherten Stand.
+  useRegieSync(state, update)
+
   const set = (key: keyof ShowState) => (v: string) => update({ [key]: v } as Partial<ShowState>)
 
   return (
@@ -139,7 +194,14 @@ export function ControlPanel() {
         <span style={{ ...labelStyle, margin: 0 }}>Regie · Control Panel</span>
         <div style={{ flex: 1 }} />
         <button
-          onClick={reset}
+          onClick={() => {
+            // Live keine unumkehrbare Aktion mit einem Klick. Der Knopf würde
+            // sonst mitten in der Sendung alle Texte auf Folge 001 zurückwerfen.
+            const sicher = window.confirm(
+              'Alle Eingaben auf die Beispielinhalte zurücksetzen?\n\nDas wirkt sofort im Sendebild.',
+            )
+            if (sicher) reset()
+          }}
           style={{ ...field, width: 'auto', cursor: 'pointer', color: 'var(--text-secondary)' }}
         >
           Auf Beispielinhalte zurücksetzen
@@ -209,8 +271,17 @@ export function ControlPanel() {
             >
               Host übernehmen
             </button>
+            {/* Ohne eingetragenen Gast würde hier eine leere Bauchbinde auf
+                Sendung gehen. Der Knopf bleibt deshalb gesperrt, bis ein Name steht. */}
             <button
-              style={{ ...field, width: 'auto', cursor: 'pointer' }}
+              disabled={!state.guestName.trim()}
+              title={state.guestName.trim() ? undefined : 'Erst einen Gastnamen eintragen'}
+              style={{
+                ...field,
+                width: 'auto',
+                cursor: state.guestName.trim() ? 'pointer' : 'not-allowed',
+                opacity: state.guestName.trim() ? 1 : 0.4,
+              }}
               onClick={() =>
                 update({
                   lowerThirdVariant: 'gast',
@@ -229,21 +300,21 @@ export function ControlPanel() {
           <Text label="Build-Ziel" value={state.buildGoal} onChange={set('buildGoal')} />
           <Field label={`Schritt (${state.buildStep}/${state.buildStepTotal})`}>
             <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="number"
+              <NumberInput
+                value={state.buildStep}
                 min={0}
                 max={state.buildStepTotal}
-                style={field}
-                value={state.buildStep}
-                onChange={(e) => update({ buildStep: Number(e.target.value) })}
+                onCommit={(v) => update({ buildStep: v })}
               />
-              <input
-                type="number"
+              <NumberInput
+                value={state.buildStepTotal}
                 min={1}
                 max={12}
-                style={field}
-                value={state.buildStepTotal}
-                onChange={(e) => update({ buildStepTotal: Math.max(1, Number(e.target.value)) })}
+                onCommit={(v) =>
+                  // Gesamtzahl nie unter den aktuellen Schritt fallen lassen,
+                  // sonst zeigt die Anzeige etwas wie "Schritt 5/3".
+                  update({ buildStepTotal: v, buildStep: Math.min(state.buildStep, v) })
+                }
               />
             </div>
           </Field>
@@ -256,13 +327,11 @@ export function ControlPanel() {
 
         <Section title="Countdown">
           <Field label="Minuten">
-            <input
-              type="number"
+            <NumberInput
+              value={state.countdownMinutes}
               min={1}
               max={60}
-              style={field}
-              value={state.countdownMinutes}
-              onChange={(e) => update({ countdownMinutes: Math.max(1, Number(e.target.value)) })}
+              onCommit={(v) => update({ countdownMinutes: v })}
             />
           </Field>
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>

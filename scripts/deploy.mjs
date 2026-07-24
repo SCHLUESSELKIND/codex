@@ -121,9 +121,38 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
 writeFileSync(PLIST, plist)
 console.log(`Autostart geschrieben: ${PLIST}`)
 
-// Bereits geladene Fassung entfernen, damit eine geänderte plist auch greift
+/*
+  Neu laden. launchd braucht nach dem Entladen einen Moment, bis das Label
+  wieder frei ist. Ein sofortiges bootstrap quittiert sonst mit
+  "Bootstrap failed: 5: Input/output error". Deshalb wird gewartet und
+  wiederholt, und ein bereits geladener Dienst gilt nicht als Fehler:
+  kickstart startet ihn ohnehin mit der neuen plist durch.
+*/
 launchctl(['bootout', TARGET], { leise: true })
-launchctl(['bootstrap', `gui/${process.getuid()}`, PLIST])
+
+let geladen = false
+for (let versuch = 0; versuch < 8; versuch += 1) {
+  await sleep(400)
+  try {
+    launchctl(['bootstrap', `gui/${process.getuid()}`, PLIST])
+    geladen = true
+    break
+  } catch (error) {
+    const text = String(error.stderr ?? error.message ?? '')
+    // 37 = "Service already bootstrapped": auch das ist ein brauchbarer Zustand.
+    if (text.includes('already bootstrapped') || text.includes(': 37:')) {
+      geladen = true
+      break
+    }
+  }
+}
+
+if (!geladen) {
+  console.error('Dienst konnte nicht geladen werden.')
+  console.error(`Von Hand prüfen: launchctl print ${TARGET}`)
+  process.exit(1)
+}
+
 launchctl(['kickstart', '-k', TARGET], { leise: true })
 console.log('Dienst geladen und gestartet.')
 

@@ -1,0 +1,12 @@
+{
+  "_hinweis": "Sendegeometrie. Wird sowohl vom Overlay (src/scenes/Build.tsx) als auch vom OBS-Einrichtungsskript (scripts/obs-setup.mjs) gelesen, damit gezeichneter Rahmen und tatsaechliche Kameraposition nie auseinanderlaufen.",
+  "stage": { "width": 1920, "height": 1080 },
+  "safe": { "x": 96, "y": 54 },
+  "cameraPip": {
+    "width": 480,
+    "height": 270,
+    "x": 1344,
+    "y": 660,
+    "_herleitung": "x = 1920 - 96 - 480 · y = 1080 - (54 + 96) - 270"
+  }
+}

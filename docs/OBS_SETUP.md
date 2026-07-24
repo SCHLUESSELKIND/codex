@@ -142,12 +142,23 @@ Das Control Panel auf einem zweiten Bildschirm im Browser offen lassen:
 `http://localhost:4830/#/control`
 
 Jede Eingabe wirkt sofort in allen OBS-Quellen, ohne Reload, ohne Szenenwechsel.
-Der Abgleich läuft über `BroadcastChannel` und `localStorage` auf derselben Origin.
-Kein Backend, keine Internetverbindung nötig.
 
-**Wichtig:** OBS-Browserquellen und das Control Panel müssen dieselbe Adresse benutzen.
-Wenn OBS `localhost` nutzt, muss die Regie auch `localhost` nutzen, nicht `127.0.0.1`.
-Sonst sind es zwei getrennte Speicher und der Abgleich greift nicht.
+Der Abgleich läuft über den Sendeserver (`/api/events`, Server-Sent Events). Das ist
+der Grund, warum die Regie in einem ganz normalen Browserfenster laufen darf:
+OBS bringt ein **eigenes Chromium mit eigenem Speicher** mit. `BroadcastChannel` und
+`localStorage` gelten nur innerhalb einer Browser-Instanz und kommen dort nie an.
+Erst der Server verbindet beide Welten. Beides läuft zusätzlich weiter, für
+sofortigen Abgleich innerhalb desselben Browsers und als Speicher über Neustarts.
+
+Praktische Folge: Die Regie kann auf einem zweiten Bildschirm, in einem anderen
+Browser oder mit `npm run dev -- --host` sogar auf einem Tablet im selben WLAN laufen.
+
+**Wichtig:** OBS-Browserquellen und Regie müssen denselben Server benutzen, also
+dieselbe Adresse mit demselben Port. Internet wird nicht gebraucht, alles bleibt lokal.
+
+Der zuletzt gesetzte Stand liegt in `.bop-state.json`. Stürzt der Server mitten in
+der Sendung ab, kommt er mit demselben Stand zurück, statt alles auf Folge 001
+zurückzuwerfen.
 
 ---
 
@@ -171,7 +182,7 @@ Sonst sind es zwei getrennte Speicher und der Abgleich greift nicht.
 | Symptom | Ursache | Lösung |
 |---|---|---|
 | Overlay bleibt weiß statt transparent | Vollbildkarte statt Overlay-Route | `/camera`, `/build`, `/screen`, `/lower-third` sind transparent, die übrigen sind absichtlich deckend |
-| Regie ändert nichts | unterschiedliche Adresse | beide auf `localhost` mit gleichem Port |
+| Regie ändert nichts | Regie und OBS hängen an verschiedenen Servern, oder der Sendeserver läuft nicht | `npm run deploy:status` prüfen, beide auf dieselbe Adresse mit gleichem Port setzen |
 | Text zu klein oder zu groß | Browserquelle nicht auf 1920 × 1080 | Größe in der Quelle korrigieren, nicht skalieren |
 | Countdown springt zurück | Haken „beim Szenenwechsel aktualisieren" | für Standby und Pause abwählen |
 | Szene bleibt leer | Renderfehler | Boundary hat abgefangen, Konsole der Browserquelle prüfen, Quelle neu laden |

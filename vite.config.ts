@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { stateRelay } from './plugins/state-relay'
 
 /*
   Ports:
@@ -14,7 +15,7 @@ import react from '@vitejs/plugin-react'
   base './' erlaubt zusätzlich statisches Hosting aus dist/ ohne Serverkonfiguration.
 */
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), stateRelay()],
   base: './',
   server: { port: 5173, strictPort: true },
   preview: { port: 4830, strictPort: true },

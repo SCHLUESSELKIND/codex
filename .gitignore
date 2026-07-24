@@ -4,3 +4,12 @@ dist
 *.local
 .env
 .env.*
+
+# Laufender Sendezustand des Relays, gehört nicht ins Repo
+.bop-state.json
+
+# Exporte und Prüfbilder. Letztere können Bildschirminhalte enthalten
+# und dürfen niemals in einem öffentlichen Repo landen.
+export/
+obs-check/
+obs-*.png

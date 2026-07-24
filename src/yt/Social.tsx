@@ -45,7 +45,7 @@ const PRESETS: Record<string, Preset> = {
     marker: 'Termin',
     tone: 'light',
     headline: 'Donnerstag 19:00',
-    sub: 'Jede Woche live aus Köln',
+    sub: 'Alle zwei Wochen live aus Köln',
   },
   'build-ergebnis': {
     marker: 'Build-Ergebnis',

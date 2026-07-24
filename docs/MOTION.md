@@ -34,6 +34,13 @@ Kurven: `--ease-snap: cubic-bezier(0.2, 0, 0, 1)` (einrasten),
 | LIVE-Puls | `live-pulse` | 1.6 s, Opazität 1 zu 0.35, **nur hier** |
 | Scanlinie | `.scanline` | wandert alle 24 s einmal durchs Standby-Bild |
 | Fortschritt | inline | Baustein füllt sich in 150 ms, kein Wachsen, kein Blenden |
+| Technik-Punkte | `live-pulse` | drei Punkte, je 0.25 s versetzt, nur auf der Karte „Technischer Check" |
+| Baustein-Atem | `.block--breathe` | 2.4 s, Opazität 1 zu 0.72, optional und bewusst kaum sichtbar |
+
+**Dauerhaft laufende Bewegung gibt es nur an drei Stellen:** LIVE-Puls, Scanlinie im
+Standby und die Punkte im technischen Check. Alles andere läuft einmal und bleibt stehen.
+Der Baustein im Wortmarken-Logo blinkt **nie**, damit die Marke auf jedem Standbild
+vollständig ist.
 
 ---
 

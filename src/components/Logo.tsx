@@ -4,24 +4,25 @@ import type { CSSProperties } from 'react'
   Logo-System BUILD ON PURPOSE.
   Entscheidung: gestapeltes Wordmark mit Baustein-Cursor.
   BUILD trägt den roten Baustein (der kleinste Build-Schritt,
-  zugleich Blinkcursor = es wird gerade gebaut).
+  zugleich Cursor: es wird gerade gebaut).
   ON PURPOSE steht als gesperrte Präzisionszeile darunter.
 */
 
 interface WordmarkProps {
   size?: number // Höhe der BUILD-Zeile in px
-  blink?: boolean
+  /** Sehr flacher Atem des Bausteins. Blinkt bewusst nicht, siehe base.css. */
+  breathe?: boolean
   style?: CSSProperties
 }
 
-export function WordmarkStacked({ size = 96, blink = false, style }: WordmarkProps) {
+export function WordmarkStacked({ size = 96, breathe = false, style }: WordmarkProps) {
   return (
     <div style={{ display: 'inline-block', lineHeight: 1, ...style }}>
       <div
         className="display"
         style={{ fontSize: size, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}
       >
-        BUILD<span className={`block${blink ? ' block--blink' : ''}`} style={{ marginLeft: '0.09em' }} />
+        BUILD<span className={`block${breathe ? ' block--breathe' : ''}`} style={{ marginLeft: '0.09em' }} />
       </div>
       <div
         style={{
@@ -41,14 +42,14 @@ export function WordmarkStacked({ size = 96, blink = false, style }: WordmarkPro
   )
 }
 
-export function WordmarkHorizontal({ size = 32, blink = false, style }: WordmarkProps) {
+export function WordmarkHorizontal({ size = 32, breathe = false, style }: WordmarkProps) {
   return (
     <div
       style={{ display: 'inline-flex', alignItems: 'baseline', gap: size * 0.4, whiteSpace: 'nowrap', ...style }}
     >
       <span className="display" style={{ fontSize: size }}>
         BUILD
-        <span className={`block${blink ? ' block--blink' : ''}`} style={{ marginLeft: '0.09em' }} />
+        <span className={`block${breathe ? ' block--breathe' : ''}`} style={{ marginLeft: '0.09em' }} />
       </span>
       <span
         style={{

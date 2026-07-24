@@ -2,13 +2,20 @@ import { Stage } from '../components/Stage'
 import { TopBar } from '../components/TopBar'
 import { ZehnxMark } from '../components/Logo'
 import { useShowState } from '../hooks/useShowState'
+import geometry from '../data/geometry.json'
 
-// Szene 03 · Build: großer Screen, Kamera-PiP unten rechts (in OBS platziert).
-// Das Overlay liefert nur den PiP-Rahmen, das Build-Ziel und den Fortschritt.
-// PiP-Sollposition für OBS: 480x270, rechts unten, Abstand 96/54.
+/*
+  Szene 03 · Build: großer Screen, Kamera-PiP unten rechts (in OBS platziert).
+  Das Overlay liefert nur den PiP-Rahmen, das Build-Ziel und den Fortschritt.
 
-const PIP_W = 480
-const PIP_H = 270
+  Die Rahmenposition kommt aus src/data/geometry.json, dieselbe Datei, aus der
+  auch scripts/obs-setup.mjs die Kamera positioniert. Nur so sitzt die Kamera
+  wirklich in den gezeichneten Eckmarken.
+*/
+
+const PIP = geometry.cameraPip
+const PIP_W = PIP.width
+const PIP_H = PIP.height
 
 export function Build() {
   const [state] = useShowState()
@@ -22,8 +29,8 @@ export function Build() {
       <div
         style={{
           position: 'absolute',
-          right: 'var(--safe-x)',
-          bottom: 'calc(var(--safe-y) + 96px)',
+          left: PIP.x,
+          top: PIP.y,
           width: PIP_W,
           height: PIP_H,
         }}
@@ -46,14 +53,19 @@ export function Build() {
         ))}
         <div
           style={{
+            // Rechtsbündig am PiP verankert: ein langer Name wächst nach links
+            // ins Bild statt über den rechten Rand hinaus.
             position: 'absolute',
-            left: 0,
+            right: 0,
             top: '100%',
             marginTop: 'var(--space-3)',
+            maxWidth: 900,
             display: 'flex',
             alignItems: 'baseline',
+            justifyContent: 'flex-end',
             gap: 'var(--space-3)',
             whiteSpace: 'nowrap',
+            overflow: 'hidden',
           }}
         >
           <span style={{ fontWeight: 800, fontSize: 20 }}>{state.presenterName}</span>
@@ -73,6 +85,9 @@ export function Build() {
           border: 'var(--line-hair) solid var(--border-subtle)',
           borderLeft: 'var(--line-accent) solid var(--live-red)',
           padding: 'var(--space-3) var(--space-6)',
+          // Begrenzt, damit die Platte bei einem langen Build-Ziel nicht bis
+          // unter den Kamera-PiP wächst und dessen Namenszeile überdeckt.
+          maxWidth: 1050,
           display: 'flex',
           alignItems: 'center',
           gap: 'var(--space-6)',
@@ -83,9 +98,22 @@ export function Build() {
           <div className="kicker kicker--red" style={{ fontSize: 13, marginBottom: 'var(--space-1)' }}>
             Build-Ziel
           </div>
-          <div style={{ fontWeight: 800, fontSize: 26 }}>{state.buildGoal}</div>
+          <div
+            style={{
+              fontWeight: 800,
+              fontSize: 26,
+              // Einzeilig und notfalls gekürzt: das Build-Ziel ist eine
+              // Statuszeile, kein Fließtext, und darf die Platte nicht sprengen.
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 700,
+            }}
+          >
+            {state.buildGoal}
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 'none' }}>
           <span className="meta" style={{ fontSize: 14 }}>
             Schritt {state.buildStep}/{state.buildStepTotal}
           </span>

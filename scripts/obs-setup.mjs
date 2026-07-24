@@ -6,9 +6,9 @@
   bereits, wird nur ihre URL aktualisiert.
 
   Aufruf:
-    node scripts/obs-setup.mjs                  → gegen http://localhost:5173
-    node scripts/obs-setup.mjs --base=http://localhost:4173
-    node scripts/obs-setup.mjs --dry            → nur zeigen, nichts ändern
+    npm run obs:setup                              → gegen den Sendeserver (4830)
+    npm run obs:setup -- --base=http://localhost:5173   → gegen den Dev-Server
+    npm run obs:setup -- --dry                     → nur zeigen, nichts ändern
 
   Das Passwort wird aus der lokalen OBS-Konfiguration gelesen:
   ~/Library/Application Support/obs-studio/plugin_config/obs-websocket/config.json
@@ -35,7 +35,15 @@ const STAGE_W = 1920
 const STAGE_H = 1080
 
 // Kamera-PiP in der Build-Szene, passend zu den Eckmarken im Overlay
-const PIP = { w: 480, h: 270, x: 1344, y: 714 }
+// Aus derselben Datei wie das Overlay, damit die Kamera exakt in den
+// gezeichneten Eckmarken sitzt und nicht daneben.
+const geometry = JSON.parse(readFileSync(new URL('../src/data/geometry.json', import.meta.url), 'utf8'))
+const PIP = {
+  w: geometry.cameraPip.width,
+  h: geometry.cameraPip.height,
+  x: geometry.cameraPip.x,
+  y: geometry.cameraPip.y,
+}
 
 const CONFIG_PATH = `${homedir()}/Library/Application Support/obs-studio/plugin_config/obs-websocket/config.json`
 

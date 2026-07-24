@@ -46,8 +46,10 @@ export function Screen() {
             padding: 'var(--space-2) var(--space-4)',
           }}
         >
+          {/* Trenner nur setzen, wenn auch ein Titel dahinter steht, sonst
+              hängt bei leerem Feld ein einsames Mittelpunktzeichen im Bild. */}
           <span className="kicker" style={{ color: 'var(--text-primary)', fontSize: 14 }}>
-            {state.segmentLabel} · {state.segmentTitle}
+            {[state.segmentLabel, state.segmentTitle].filter((t) => t.trim()).join(' · ')}
           </span>
         </div>
       )}

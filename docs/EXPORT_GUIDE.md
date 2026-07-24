@@ -2,19 +2,19 @@
 
 ## Automatischer Export
 
-Server starten, dann exportieren:
-
-```bash
-npm run build && npm run preview
-```
-
-In einem zweiten Terminal:
+Nach `npm run deploy` läuft der Sendeserver dauerhaft. Dann genügt ein Befehl:
 
 ```bash
 npm run export
 ```
 
-Alle Dateien landen als PNG in `export/`. Gegen den Dev-Server:
+Alle Dateien landen als PNG in `export/`.
+
+**Kein zweiter Server nötig.** Ein zusätzliches `npm run preview` würde auf demselben
+Port 4830 scheitern, weil der Dienst ihn bereits hält. Läuft der Dienst nicht,
+sagt `npm run deploy:status` das, und `npm run deploy` bringt ihn zurück.
+
+Gegen den Dev-Server, etwa während man am Design arbeitet:
 
 ```bash
 npm run export -- --base=http://localhost:5173

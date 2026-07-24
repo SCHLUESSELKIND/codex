@@ -74,7 +74,7 @@ export function Banner() {
         }}
       >
         <div>
-          <WordmarkStacked size={168} blink={false} />
+          <WordmarkStacked size={168} breathe={false} />
           <div
             style={{
               marginTop: 40,
@@ -102,7 +102,7 @@ export function Banner() {
             }}
           >
             <span style={{ width: 14, height: 14, background: 'currentColor' }} />
-            Jede Woche live
+            Alle zwei Wochen live
           </span>
           <span
             style={{

@@ -86,7 +86,7 @@ body {
 /* Der Baustein im Wordmark blinkt NICHT. Er ist Teil der Marke und muss auf
    jedem Standbild vollständig sein. Bewegung bleibt dem LIVE-Indikator
    vorbehalten. Das Modifier bleibt als sehr flacher Atem für Sonderfälle. */
-.block--blink {
+.block--breathe {
   animation: block-breathe 2.4s ease-in-out infinite;
 }
 

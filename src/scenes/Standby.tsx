@@ -15,7 +15,11 @@ export function Standby() {
   const [state] = useShowState()
   const remaining = useCountdown(state)
   const countdownActive = state.countdownStartedAt !== null
-  const rundown = parseRundown(state.rundown)
+  // Mehr als sechs Zeilen passen nicht über den Countdown. Statt zu überlappen
+  // wird gekürzt und der Rest sichtbar als Zähler ausgewiesen.
+  const alle = parseRundown(state.rundown)
+  const rundown = alle.slice(0, 6)
+  const weitere = alle.length - rundown.length
 
   return (
     <Stage solid>
@@ -84,10 +88,15 @@ export function Standby() {
             </div>
           ))}
           <div style={{ borderTop: 'var(--line-hair) solid var(--border-subtle)' }} />
+          {weitere > 0 && (
+            <div className="meta" style={{ fontSize: 14, marginTop: 'var(--space-3)' }}>
+              und {weitere} {weitere === 1 ? 'weiterer Punkt' : 'weitere Punkte'}
+            </div>
+          )}
         </div>
 
         {countdownActive && (
-          <div style={{ position: 'absolute', right: 0, top: 470, textAlign: 'right', width: 620 }}>
+          <div style={{ position: 'absolute', right: 0, top: 500, textAlign: 'right', width: 620 }}>
             <div className="kicker" style={{ marginBottom: 'var(--space-2)' }}>
               Start in
             </div>
