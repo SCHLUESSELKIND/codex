@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { createHash } from 'node:crypto'
 import { WebSocket } from 'ws'
+import { previewUrl } from './lib/port.mjs'
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
@@ -26,7 +27,9 @@ const args = Object.fromEntries(
   }),
 )
 
-const BASE = args.base ?? 'http://localhost:5173'
+// Standard ist der Sendeserver. Für Arbeit am Design bewusst umschalten:
+//   npm run obs:setup -- --base=http://localhost:5173
+const BASE = args.base ?? previewUrl()
 const DRY = Boolean(args.dry)
 const STAGE_W = 1920
 const STAGE_H = 1080

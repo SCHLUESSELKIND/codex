@@ -24,7 +24,7 @@ npm run export -- --base=http://localhost:5173
 
 | Option | Wirkung |
 |---|---|
-| `--base=<url>` | Serveradresse, Standard `http://localhost:4173` |
+| `--base=<url>` | Serveradresse, Standard: der Sendeserver aus `vite.config.ts` |
 | `--only=<gruppe>` | nur eine Gruppe: `channel`, `thumbs`, `social`, `cards` |
 | `--episode=<nr>` | Episodennummer in Dateinamen und Grafik, Standard `001` |
 

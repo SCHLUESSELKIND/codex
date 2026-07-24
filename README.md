@@ -26,25 +26,40 @@ Leitidee: **Operational Intelligence**. BRIEFING analysiert, BUILD ON PURPOSE ba
 
 ## Schnellstart
 
+Einmalig einrichten. Danach läuft der Sendeserver dauerhaft im Hintergrund und
+startet bei jeder Anmeldung automatisch mit:
+
 ```bash
 npm install
-npm run dev
+npm run deploy
 ```
 
 Dann im Browser:
 
 | Was | Adresse |
 |---|---|
-| Regie | http://localhost:5173/#/control |
-| Standby | http://localhost:5173/#/standby |
-| Kamera-Overlay | http://localhost:5173/#/camera |
+| Regie | http://localhost:4830/#/control |
+| Standby | http://localhost:4830/#/standby |
+| Kamera-Overlay | http://localhost:4830/#/camera |
 | Alle Ansichten | siehe Tabelle unten |
 
-Für den echten Sendebetrieb die gebaute Fassung nehmen, sie ist stabiler:
+OBS in einem Schritt einrichten, siehe `docs/OBS_SETUP.md`:
 
 ```bash
-npm run build && npm run preview
+npm run obs:setup
 ```
+
+Zum Arbeiten am Design mit Hot Reload:
+
+```bash
+npm run dev
+```
+
+| Befehl | Zweck |
+|---|---|
+| `npm run deploy` | bauen, Dienst einrichten, starten, prüfen |
+| `npm run deploy:status` | läuft der Sendeserver? |
+| `npm run deploy:stop` | Dienst und Autostart entfernen |
 
 ---
 

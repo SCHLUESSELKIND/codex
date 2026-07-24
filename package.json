@@ -2,15 +2,18 @@
   "name": "build-on-purpose",
   "private": true,
   "version": "1.0.0",
-  "description": "BUILD ON PURPOSE · YouTube- und OBS-Designsystem der wöchentlichen KI-Live-Show von Thomas Frerich",
+  "description": "BUILD ON PURPOSE · YouTube- und OBS-Designsystem der zweiwöchentlichen KI-Live-Show von Thomas Frerich",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview --port 4173",
+    "preview": "vite preview",
     "export": "node scripts/export.mjs",
     "obs:setup": "node scripts/obs-setup.mjs",
-    "obs:verify": "node scripts/obs-verify.mjs"
+    "obs:verify": "node scripts/obs-verify.mjs",
+    "deploy": "npm run build && node scripts/deploy.mjs",
+    "deploy:status": "node scripts/deploy.mjs --status",
+    "deploy:stop": "node scripts/deploy.mjs --stop"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.5",

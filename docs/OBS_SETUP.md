@@ -4,30 +4,41 @@ Ausgabe: **1920 × 1080, 30 fps**. Alle Overlays sind exakt auf diese Stage geba
 
 ---
 
-## 1. Server starten
+## 1. Sendeserver einrichten (einmalig)
 
 ```bash
 npm install
-npm run dev
+npm run deploy
 ```
 
-Läuft dann auf `http://localhost:5173`. Der Server muss während der Sendung laufen.
+Das baut die Produktionsfassung und registriert sie als Hintergrunddienst auf
+`http://localhost:4830`. Der Dienst startet ab dann bei jeder Anmeldung
+automatisch mit und wird von macOS neu gestartet, falls er abstürzt.
 
-Für maximale Stabilität im Livebetrieb besser die gebaute Fassung nehmen:
+**Warum nicht einfach `npm run dev`?** Weil ein Terminalfenster, das während der
+Sendung geschlossen wird oder nach einem Neustart fehlt, sämtliche Overlays
+schwarz schaltet. Der Dienst hängt an nichts, was man versehentlich zumachen kann.
+
+Zustand jederzeit prüfen:
 
 ```bash
-npm run build
-npm run preview
+npm run deploy:status
 ```
 
-Die läuft auf `http://localhost:4173` und hat keinen Dev-Server-Overhead und kein HMR.
-**Empfehlung: für echte Sendungen immer `preview` nutzen, nicht `dev`.**
+Nach Codeänderungen erneut `npm run deploy` ausführen, das baut neu und lädt den
+Dienst durch. Für Designarbeit mit Hot Reload weiterhin `npm run dev` auf Port 5173.
+
+Rückstandsfrei entfernen:
+
+```bash
+npm run deploy:stop
+```
 
 ---
 
 ## 2a. Automatisch einrichten (empfohlen)
 
-Bei laufendem OBS und laufendem Dev-Server richtet ein Befehl alles ein:
+Bei laufendem OBS und laufendem Sendeserver richtet ein Befehl alles ein:
 
 ```bash
 npm run obs:setup
@@ -44,10 +55,11 @@ Vorher ansehen, ohne etwas zu ändern:
 npm run obs:setup -- --dry
 ```
 
-Auf den Produktions-Server umstellen (erneut ausführen aktualisiert nur die URLs):
+Ohne Argument zielt es auf den Sendeserver. Zum Arbeiten am Design lässt sich OBS
+auf den Dev-Server mit Hot Reload umhängen und danach wieder zurückstellen:
 
 ```bash
-npm run obs:setup -- --base=http://localhost:4173
+npm run obs:setup -- --base=http://localhost:5173
 ```
 
 Prüfen, ob alles in OBS wirklich rendert:
@@ -71,23 +83,23 @@ Für jede Quelle in OBS: `+ → Browserquelle`, Breite **1920**, Höhe **1080**.
 
 | OBS-Szene | URL | Hinweis |
 |---|---|---|
-| 01 Standby | `http://localhost:4173/#/standby` | Vollbild, deckt alles ab |
-| 02 Kamera | `http://localhost:4173/#/camera` | über die Kameraquelle legen |
-| 03 Build | `http://localhost:4173/#/build` | über Screen und Kamera-PiP legen |
-| 04 Nur Screen | `http://localhost:4173/#/screen` | über die Screenquelle legen |
+| 01 Standby | `http://localhost:4830/#/standby` | Vollbild, deckt alles ab |
+| 02 Kamera | `http://localhost:4830/#/camera` | über die Kameraquelle legen |
+| 03 Build | `http://localhost:4830/#/build` | über Screen und Kamera-PiP legen |
+| 04 Nur Screen | `http://localhost:4830/#/screen` | über die Screenquelle legen |
 
 Zusätzliche Karten, je als eigene Szene oder als umschaltbare Quelle:
 
 | Zweck | URL |
 |---|---|
-| Themenkarte (Segmentwechsel) | `http://localhost:4173/#/topic` |
-| Kernaussage | `http://localhost:4173/#/statement` |
-| Bauchbinde einzeln | `http://localhost:4173/#/lower-third` |
-| Pause | `http://localhost:4173/#/break` |
-| Ende | `http://localhost:4173/#/end` |
-| Technischer Check | `http://localhost:4173/#/technical` |
+| Themenkarte (Segmentwechsel) | `http://localhost:4830/#/topic` |
+| Kernaussage | `http://localhost:4830/#/statement` |
+| Bauchbinde einzeln | `http://localhost:4830/#/lower-third` |
+| Pause | `http://localhost:4830/#/break` |
+| Ende | `http://localhost:4830/#/end` |
+| Technischer Check | `http://localhost:4830/#/technical` |
 
-Regie im normalen Browser, nicht in OBS: `http://localhost:4173/#/control`
+Regie im normalen Browser, nicht in OBS: `http://localhost:4830/#/control`
 
 ---
 
@@ -127,7 +139,7 @@ die Build-Ziel-Platte unten links (etwa 730 × 66 px) und die Kopfzeile.
 ## 5. Regie während der Sendung
 
 Das Control Panel auf einem zweiten Bildschirm im Browser offen lassen:
-`http://localhost:4173/#/control`
+`http://localhost:4830/#/control`
 
 Jede Eingabe wirkt sofort in allen OBS-Quellen, ohne Reload, ohne Szenenwechsel.
 Der Abgleich läuft über `BroadcastChannel` und `localStorage` auf derselben Origin.

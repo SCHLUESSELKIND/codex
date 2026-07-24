@@ -1,10 +1,11 @@
 /*
   Export aller Grafiken als PNG.
 
-  Voraussetzung: ein laufender Server (npm run dev oder npm run preview).
+  Voraussetzung: ein laufender Server. Nach "npm run deploy" läuft der
+  Sendeserver dauerhaft, dann genügt der Aufruf ohne Argumente.
   Aufruf:
-    npm run export                      → gegen http://localhost:4173
-    npm run export -- --base=http://localhost:5173
+    npm run export                      → gegen den Sendeserver
+    npm run export -- --base=http://localhost:5173   (Entwicklung)
     npm run export -- --only=thumbs
 
   Ergebnis liegt in export/ und ist nach EXPORT_GUIDE.md benannt.
@@ -13,6 +14,7 @@
 import { chromium } from 'playwright'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { previewUrl } from './lib/port.mjs'
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
@@ -21,7 +23,7 @@ const args = Object.fromEntries(
   }),
 )
 
-const BASE = args.base ?? 'http://localhost:4173'
+const BASE = args.base ?? previewUrl()
 const ONLY = args.only ?? null
 const EPISODE = args.episode ?? '001'
 const OUT = resolve(process.cwd(), 'export')
