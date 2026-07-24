@@ -146,9 +146,13 @@ Vite · React · TypeScript · CSS Custom Properties · SVG-freie Umsetzung übe
 Layout-Primitive. Keine Komponentenbibliothek, kein Backend, keine externen Inhalte,
 die während einer Sendung ausfallen können. Schriften liegen lokal im Paket.
 
-Der Abgleich zwischen Regie und Sendebild läuft über `BroadcastChannel` mit
-`localStorage` als Persistenz. Eine Fehler-Boundary sorgt dafür, dass ein Renderfehler
-das Videobild nie durch eine weiße Fläche ersetzt.
+Der Abgleich zwischen Regie und Sendebild läuft über den Sendeserver
+(`/api/events`, Server-Sent Events), weil OBS ein eigenes Chromium mit eigenem
+Speicher mitbringt und `BroadcastChannel` allein dort nie ankommt. Beides läuft
+zusätzlich weiter: `BroadcastChannel` für den sofortigen Abgleich innerhalb
+desselben Browsers, `localStorage` als Speicher über Neustarts. Eine
+Fehler-Boundary sorgt dafür, dass ein Renderfehler das Videobild nie durch eine
+weiße Fläche ersetzt.
 
 ```
 src/
@@ -158,9 +162,21 @@ src/
   hooks/        Zustand, Countdown
   state/        Sendezustand und Ablauf-Parser
   styles/       Tokens, Basis, Motion
-  data/         Thumbnail-Templates, Textpool
+  data/         Thumbnail-Templates, Textpool, Sendegeometrie
   yt/           Banner, Profilbild, Thumbnails, Endscreen, Social
+plugins/        State-Relay für den Vite-Server
 docs/           Dokumentation
-scripts/        Export
+scripts/        Deploy, OBS-Einrichtung, Export
 public/         Portraits, Logos
 ```
+
+---
+
+## Bekannte Meldung aus `npm audit`
+
+`npm audit` meldet zwei Einträge zu `react-router` („RSC Mode CSRF Bypass").
+Dieses Projekt ist davon nicht betroffen: Es nutzt `HashRouter` als reine
+Client-Anwendung, ohne React Server Components, ohne Server-Actions und ohne
+serverseitiges Routing. Eine korrigierte Fassung gibt es bislang nicht,
+`7.18.1` ist die aktuelle Version. Die Meldung bleibt deshalb stehen, statt sie
+durch ein sinnloses Downgrade zu verdecken.
