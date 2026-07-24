@@ -8,8 +8,10 @@ dist
 # Laufender Sendezustand des Relays, gehört nicht ins Repo
 .bop-state.json
 
-# Exporte und Prüfbilder. Letztere können Bildschirminhalte enthalten
-# und dürfen niemals in einem öffentlichen Repo landen.
-export/
+# Prüfbilder aus OBS. Diese können den geteilten Bildschirm zeigen und damit
+# Zugangsdaten oder private Inhalte. Sie dürfen nie in ein öffentliches Repo.
 obs-check/
 obs-*.png
+
+# Hinweis: export/ bleibt bewusst im Repo. Das sind erzeugte Marken-Assets
+# ohne Bildschirminhalte, die man direkt aus GitHub laden können soll.
