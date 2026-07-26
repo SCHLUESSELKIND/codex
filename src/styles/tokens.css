@@ -24,6 +24,32 @@
   --warning: #ffb020;
   --inactive: #3a3a36;
 
+  /* ---- Sendeflächen (Challenge- und Newsroom-Ansicht) ----
+     Panels sind der frische Teil des Systems: echte Flächen mit Kante
+     statt nur Linien. Sie machen aus dem Bild ein Arbeitsgerät, nicht
+     eine Textseite. Bewusst nur zwei Stufen, damit nichts brummt. */
+  --panel: #0e0e10;
+  --panel-raised: #16161a;
+  --panel-border: rgba(244, 244, 241, 0.14);
+  --panel-glow: rgba(255, 43, 43, 0.35);
+
+  /* ---- Zustände der Challenge-Uhr ----
+     Ein einziger Farbverlauf über die Zeit erzählt den Druck:
+     ruhig, dann Aufmerksamkeit, dann Dringlichkeit. */
+  --clock-normal: #f4f4f1;
+  --clock-warn: #ffb020; /* letzte 10 Minuten */
+  --clock-critical: #ff2b2b; /* letzte 2 Minuten */
+  --clock-done: #2fbf71; /* vor Ablauf geschafft */
+  --clock-track: rgba(244, 244, 241, 0.1);
+
+  /* ---- Segmentakzente ----
+     Rot bleibt der Challenge vorbehalten, damit es seine Bedeutung behält. */
+  --seg-intro: #f4f4f1;
+  --seg-news: #f57b1f;
+  --seg-fails: #ffb020; /* eigener Gelbton: die Rubrik grinst, ohne zu schreien */
+  --seg-build: #ff2b2b;
+  --seg-outro: #a7a7a0;
+
   /* ---- Typografie ---- */
   --font-display: 'Archivo Black', 'Arial Black', sans-serif;
   --font-ui: 'Inter Variable', 'Inter', 'Helvetica Neue', sans-serif;

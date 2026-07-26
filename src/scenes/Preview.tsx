@@ -3,6 +3,8 @@ import { Camera } from './Camera'
 import { Build } from './Build'
 import { Screen } from './Screen'
 import { LowerThirdView } from './LowerThirdView'
+import { Challenge } from './Challenge'
+import { Newsroom } from './Newsroom'
 
 /*
   Abnahme-Route. Legt ein Overlay über einen simulierten Videohintergrund,
@@ -22,6 +24,8 @@ const OVERLAYS: Record<string, () => JSX.Element> = {
   build: Build,
   screen: Screen,
   'lower-third': LowerThirdView,
+  challenge: Challenge,
+  newsroom: Newsroom,
 }
 
 function background(kind: string): React.CSSProperties {

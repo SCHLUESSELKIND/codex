@@ -1,7 +1,7 @@
 import { Stage } from '../components/Stage'
 import { MetaRail } from '../components/MetaRail'
 import { useShowState } from '../hooks/useShowState'
-import { parseRundown } from '../state/showState'
+import { parseRundown, segmentLabel, segmentFarbe } from '../state/showState'
 
 /*
   Themenkarte für den Segmentwechsel.
@@ -13,15 +13,15 @@ import { parseRundown } from '../state/showState'
 export function Topic() {
   const [state] = useShowState()
   const rundown = parseRundown(state.rundown)
-  const activeIndex = rundown.findIndex(
-    (item) => item.label.toLowerCase() === state.segmentLabel.trim().toLowerCase(),
-  )
+  const marke = segmentLabel(state.segment).toLowerCase()
+  const activeIndex = rundown.findIndex((item) => item.label.toLowerCase() === marke)
+  const akzent = segmentFarbe(state.segment)
 
   return (
     <Stage solid>
       <div style={{ position: 'absolute', left: 'var(--safe-x)', top: 330, width: 1060 }}>
-        <div className="reveal-up kicker kicker--red" style={{ fontSize: 26 }}>
-          {state.segmentLabel}
+        <div className="reveal-up kicker" style={{ fontSize: 26, color: akzent }}>
+          {segmentLabel(state.segment)}
         </div>
         <div className="hairline draw-x" style={{ margin: 'var(--space-8) 0', width: 420 }} />
         <div className="reveal-up reveal-up--d1 display" style={{ fontSize: 'var(--type-episode)' }}>
@@ -48,14 +48,14 @@ export function Topic() {
                     padding: 'var(--space-3) 0 var(--space-3) var(--space-4)',
                     borderTop: 'var(--line-hair) solid var(--border-subtle)',
                     borderLeft: isActive
-                      ? 'var(--line-accent) solid var(--live-red)'
+                      ? `var(--line-accent) solid ${akzent}`
                       : 'var(--line-accent) solid transparent',
                     opacity: isPast ? 0.32 : 1,
                   }}
                 >
                   <span
                     className="meta"
-                    style={{ fontSize: 14, minWidth: 120, color: isActive ? 'var(--live-red)' : 'var(--text-muted)' }}
+                    style={{ fontSize: 14, minWidth: 120, color: isActive ? akzent : 'var(--text-muted)' }}
                   >
                     {item.label}
                   </span>

@@ -1,6 +1,7 @@
 import { Stage } from '../components/Stage'
 import { TopBar } from '../components/TopBar'
 import { ZehnxMark } from '../components/Logo'
+import { ChallengeBar } from '../components/ChallengeClock'
 import { useShowState } from '../hooks/useShowState'
 import geometry from '../data/geometry.json'
 
@@ -19,7 +20,8 @@ const PIP_H = PIP.height
 
 export function Build() {
   const [state] = useShowState()
-  const blocks = Array.from({ length: state.buildStepTotal }, (_, i) => i < state.buildStep)
+  const erfuellt = state.challengeKriterien.filter((k) => k.erfuellt).length
+  const gesamt = state.challengeKriterien.length
 
   return (
     <Stage>
@@ -96,41 +98,43 @@ export function Build() {
       >
         <div>
           <div className="kicker kicker--red" style={{ fontSize: 13, marginBottom: 'var(--space-1)' }}>
-            Build-Ziel
+            {state.challengeGelockt ? 'Ziel gelockt' : 'Heute'}
           </div>
           <div
             style={{
               fontWeight: 800,
               fontSize: 26,
-              // Einzeilig und notfalls gekürzt: das Build-Ziel ist eine
-              // Statuszeile, kein Fließtext, und darf die Platte nicht sprengen.
+              // Einzeilig und notfalls gekürzt: das Ziel ist eine Statuszeile,
+              // kein Fließtext, und darf die Platte nicht sprengen.
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: 700,
+              maxWidth: 640,
             }}
           >
-            {state.buildGoal}
+            {state.challengeTitel}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flex: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', flex: 'none' }}>
           <span className="meta" style={{ fontSize: 14 }}>
-            Schritt {state.buildStep}/{state.buildStepTotal}
+            {erfuellt}/{gesamt}
           </span>
           <div style={{ display: 'flex', gap: 6 }}>
-            {blocks.map((done, i) => (
+            {state.challengeKriterien.map((k, i) => (
               <span
                 key={i}
                 style={{
                   width: 14,
                   height: 18,
-                  background: done ? 'var(--live-red)' : 'transparent',
-                  border: done ? 'none' : 'var(--line-hair) solid var(--border-strong)',
+                  background: k.erfuellt ? 'var(--success)' : 'transparent',
+                  border: k.erfuellt ? 'none' : 'var(--line-hair) solid var(--border-strong)',
                   transition: 'background var(--motion-micro) var(--ease-snap)',
                 }}
               />
             ))}
           </div>
+          {/* Die Uhr gehört auch in die schlanke Ansicht: ohne sie fehlt der Druck */}
+          <ChallengeBar state={state} width={280} />
         </div>
         {state.showZehnx && <ZehnxMark size={12} />}
       </div>

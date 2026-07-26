@@ -11,6 +11,10 @@ import './styles/motion.css'
 import { Standby } from './scenes/Standby'
 import { Camera } from './scenes/Camera'
 import { Build } from './scenes/Build'
+import { Challenge } from './scenes/Challenge'
+import { Newsroom } from './scenes/Newsroom'
+import { Fails } from './scenes/Fails'
+import { Bumper } from './scenes/Bumper'
 import { Screen } from './scenes/Screen'
 import { Topic } from './scenes/Topic'
 import { LowerThirdView } from './scenes/LowerThirdView'
@@ -37,6 +41,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/standby" element={<Standby />} />
         <Route path="/camera" element={<Camera />} />
         <Route path="/build" element={<Build />} />
+        <Route path="/challenge" element={<Challenge />} />
+        <Route path="/newsroom" element={<Newsroom />} />
+        <Route path="/fails" element={<Fails />} />
+        <Route path="/bumper/:segment" element={<Bumper />} />
         <Route path="/screen" element={<Screen />} />
         <Route path="/topic" element={<Topic />} />
         <Route path="/lower-third" element={<LowerThirdView />} />

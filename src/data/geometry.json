@@ -1,12 +1,50 @@
 {
-  "_hinweis": "Sendegeometrie. Wird sowohl vom Overlay (src/scenes/Build.tsx) als auch vom OBS-Einrichtungsskript (scripts/obs-setup.mjs) gelesen, damit gezeichneter Rahmen und tatsaechliche Kameraposition nie auseinanderlaufen.",
+  "_hinweis": "Sendegeometrie. Wird von den Overlays UND vom OBS-Einrichtungsskript gelesen, damit gezeichnete Rahmen und tatsaechliche Quellen nie auseinanderlaufen. Alle Werte in Pixeln auf der 1920x1080-Stage.",
   "stage": { "width": 1920, "height": 1080 },
   "safe": { "x": 96, "y": 54 },
+
   "cameraPip": {
     "width": 480,
     "height": 270,
     "x": 1344,
     "y": 660,
-    "_herleitung": "x = 1920 - 96 - 480 · y = 1080 - (54 + 96) - 270"
+    "_herleitung": "Build-Szene klassisch: x = 1920 - 96 - 480 · y = 1080 - (54 + 96) - 270"
+  },
+
+  "challenge": {
+    "_raster": "Aussenrand 48, Spaltenabstand 32, rechte Spalte 544 breit. Kopfzeile bis 60, Zeitschiene bei 78, Fensterbeschriftungen bei 104, Inhalte ab 122, alles endet bei 1026.",
+    "screen": {
+      "x": 48,
+      "y": 122,
+      "width": 1248,
+      "height": 702,
+      "_herleitung": "16:9 exakt (1248 x 9/16 = 702), linke Spalte von 48 bis 1296"
+    },
+    "chat": {
+      "x": 48,
+      "y": 868,
+      "width": 1248,
+      "height": 158,
+      "_hinweis": "Slot fuer die Chat-Quelle, unter dem Screen, endet buendig mit der rechten Spalte"
+    },
+    "camera": {
+      "x": 1328,
+      "y": 122,
+      "width": 544,
+      "height": 306,
+      "_herleitung": "16:9, rechte Spalte oben"
+    },
+    "clock": {
+      "x": 1328,
+      "y": 452,
+      "width": 544,
+      "height": 296
+    },
+    "lock": {
+      "x": 1328,
+      "y": 772,
+      "width": 544,
+      "height": 254
+    }
   }
 }

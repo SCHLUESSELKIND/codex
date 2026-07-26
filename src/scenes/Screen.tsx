@@ -1,6 +1,7 @@
 import { Stage } from '../components/Stage'
 import { LiveBadge, Monogram } from '../components/Logo'
 import { useShowState } from '../hooks/useShowState'
+import { segmentLabel } from '../state/showState'
 
 // Szene 04 · Nur Screen: maximal reduziert, nichts verdeckt den Inhalt.
 export function Screen() {
@@ -35,7 +36,7 @@ export function Screen() {
         )}
         {state.showLiveBadge && <LiveBadge size={14} live={state.isLive} />}
       </div>
-      {state.showSegment && state.segmentLabel && (
+      {state.showSegment && (
         <div
           style={{
             position: 'absolute',
@@ -49,7 +50,7 @@ export function Screen() {
           {/* Trenner nur setzen, wenn auch ein Titel dahinter steht, sonst
               hängt bei leerem Feld ein einsames Mittelpunktzeichen im Bild. */}
           <span className="kicker" style={{ color: 'var(--text-primary)', fontSize: 14 }}>
-            {[state.segmentLabel, state.segmentTitle].filter((t) => t.trim()).join(' · ')}
+            {[segmentLabel(state.segment), state.segmentTitle].filter((t) => t.trim()).join(' · ')}
           </span>
         </div>
       )}

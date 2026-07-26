@@ -2,13 +2,14 @@ import { Stage } from '../components/Stage'
 import { TopBar } from '../components/TopBar'
 import { LowerThird } from '../components/LowerThird'
 import { useShowState } from '../hooks/useShowState'
+import { segmentLabel } from '../state/showState'
 
 // Szene 02 · Kamera: transparentes Overlay, Kamera bleibt dominant.
 export function Camera() {
   const [state] = useShowState()
   return (
     <Stage>
-      <TopBar state={state} segment={state.segmentLabel} />
+      <TopBar state={state} segment={segmentLabel(state.segment)} />
       {state.showNamePlate && (
         <LowerThird
           variant={state.lowerThirdVariant}
