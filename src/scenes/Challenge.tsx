@@ -48,15 +48,21 @@ function Fenster({
           pointerEvents: 'none',
         }}
       />
-      {/* Beschriftung sitzt auf der Oberkante, damit sie kein Bild verdeckt */}
+      {/*
+        Beschriftung auf der Oberkante, mit eigener dunkler Fläche.
+        Ohne sie verschwindet der Text, sobald darunter eine helle Website
+        liegt, und genau das ist bei einer Website-Challenge der Normalfall.
+      */}
       <div
         style={{
           position: 'absolute',
           left: x,
-          top: y - 26,
-          display: 'flex',
+          top: y - 28,
+          display: 'inline-flex',
           alignItems: 'center',
           gap: 8,
+          background: 'var(--bg-primary)',
+          padding: '4px 9px',
         }}
       >
         <span
@@ -71,7 +77,7 @@ function Fenster({
             font: '800 13px var(--font-ui)',
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
-            color: akzent ? 'var(--live-red)' : 'var(--text-muted)',
+            color: akzent ? 'var(--live-red)' : 'var(--text-secondary)',
           }}
         >
           {titel}
