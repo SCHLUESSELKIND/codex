@@ -290,6 +290,25 @@ def dc_block(buf):
     return [v - m for v in buf]
 
 
+def dc_blocker(buf, f_hz=10.0):
+    """
+    Rekursiver Gleichspannungssperrer, ganz am Ende der Kette.
+    WARUM zusaetzlich zum Abzug des Mittelwerts: der Begrenzer arbeitet mit einer
+    zeitlich wandernden Verstaerkung und schiebt dadurch die Nulllinie um etwa
+    -74 dBFS. Hoerbar ist das nicht, aber es kostet Aussteuerungsreserve und
+    steht in der Vorgabe. WARUM rekursiv statt Mittelwertabzug: dieser Filter
+    laesst Sample 0 exakt auf Null, ein Abzug wuerde dort eine Stufe erzeugen.
+    """
+    r = 1.0 - TWO_PI * f_hz / SR
+    out = [0.0] * len(buf)
+    x1 = y1 = 0.0
+    for i, xn in enumerate(buf):
+        y1 = xn - x1 + r * y1
+        x1 = xn
+        out[i] = y1
+    return out
+
+
 def saturate_tanh(buf, drive=1.2, bias=0.15):
     """
     tanh-Saettigung mit kleinem Gleichanteil vor der Kennlinie.
@@ -1186,10 +1205,34 @@ def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=8):
     """
     ceiling = db(tp_limit - 0.3)   # Startwert, Zwischenwertspitzen brauchen Luft
     report, gr = None, 0.0
+    # Beginn der endgueltigen Stille in der Quelle, damit sie erhalten bleibt.
+    zt = len(L)
+    while zt > 1 and L[zt - 1] == 0.0 and R[zt - 1] == 0.0:
+        zt -= 1
     for _ in range(rounds):
         a = [v * gain for v in L]
         b = [v * gain for v in R]
         a, b, gr = limiter(a, b, ceiling)
+        a, b = dc_blocker(a), dc_blocker(b)
+        # Der Sperrer klingt am Dateiende mit seiner eigenen Zeitkonstante aus.
+        # Zwei Millisekunden Auslauf auf der bereits ausgeblendeten Fahne setzen
+        # das letzte Sample sicher auf Null zurueck.
+        t = ms(2.0)
+        for i in range(t):
+            g2 = 1.0 - (i + 1) / float(t)
+            a[len(a) - t + i] *= g2
+            b[len(b) - t + i] *= g2
+        # Wo die Quelle bereits exakt still war, muss auch die Ausgabe exakt
+        # still sein. Das Intro-Bett endet laut Vorgabe in 600 ms absoluter
+        # Stille, damit der Moderator einen Satz frei stehen lassen kann.
+        for i in range(zt, len(a)):
+            a[i] = 0.0
+            b[i] = 0.0
+        f = min(ms(1.0), zt)
+        for i in range(f):
+            g2 = 1.0 - (i + 1) / float(f)
+            a[zt - f + i] *= g2
+            b[zt - f + i] *= g2
         write_wav24(path, a, b)
         m = measure_ffmpeg(path)
         report = m
