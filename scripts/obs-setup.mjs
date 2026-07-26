@@ -69,6 +69,39 @@ const CARDS = [
   { scene: '07 Pause', source: 'BOP Karte · Pause', route: '/break', refresh: false },
   { scene: '08 Ende', source: 'BOP Karte · Ende', route: '/end', refresh: true },
   { scene: '09 Technischer Check', source: 'BOP Karte · Technik', route: '/technical', refresh: true },
+  // Rubrikkarte fAILs, Vollbild
+  { scene: '12 fAILs', source: 'BOP Karte · fAILs', route: '/fails', refresh: true },
+]
+
+/*
+  Segment-Bumper: die kurzen Karten vor jedem Segment. Sie laufen etwa drei
+  Sekunden, danach wird zurückgeschnitten. refresh ist Pflicht, sonst läuft
+  die Einblendung nur beim allerersten Mal.
+*/
+const BUMPER = ['intro', 'news', 'fails', 'build', 'outro']
+
+/*
+  Die zusammengesetzten Sendeansichten. Hier liegen mehrere Quellen unter dem
+  Overlay, exakt auf den Koordinaten aus data/geometry.json.
+    layout beschreibt, welche vorhandene Quelle in welches Fenster gehört.
+*/
+const KOMPOSITIONEN = [
+  {
+    scene: '10 Newsroom',
+    source: 'BOP Overlay · Newsroom',
+    route: '/newsroom',
+    layout: [{ suche: /kamera|camera|zv-1/i, ziel: { x: 96, y: 196, width: 848, height: 477 } }],
+  },
+  {
+    scene: '11 Challenge',
+    source: 'BOP Overlay · Challenge',
+    route: '/challenge',
+    layout: [
+      { suche: /bildschirm|screen|display/i, ziel: geometry.challenge.screen },
+      { suche: /kamera|camera|zv-1/i, ziel: geometry.challenge.camera },
+      { suche: /chat/i, ziel: geometry.challenge.chat, optional: true },
+    ],
+  },
 ]
 
 // Bauchbinde als eigene Quelle, die über jede Szene gelegt werden kann
@@ -212,6 +245,47 @@ async function raiseToTop(sceneName, sourceName) {
   }
 }
 
+/*
+  Setzt eine vorhandene Quelle exakt in ein Fenster der Sendeoberfläche.
+  Kopiert wird die Quelle NICHT: sie wird als Verweis in die Szene gelegt,
+  damit es weiterhin nur eine Kamera und einen Bildschirm im Projekt gibt.
+*/
+async function platziere(sceneName, muster, ziel, optional = false) {
+  const { sceneItems } = await send('GetSceneItemList', { sceneName })
+  let item = sceneItems.find((i) => muster.test(i.sourceName))
+
+  if (!item) {
+    // Quelle steckt noch in einer anderen Szene: von dort verweisen
+    const { inputs } = await send('GetInputList', {})
+    const quelle = inputs.find((i) => muster.test(i.inputName))
+    if (!quelle) {
+      if (!optional) console.log(`  ! keine Quelle für ${muster} gefunden, Fenster bleibt leer`)
+      return
+    }
+    await send('CreateSceneItem', { sceneName, sourceName: quelle.inputName, sceneItemEnabled: true })
+    const neu = await send('GetSceneItemList', { sceneName })
+    item = neu.sceneItems.find((i) => i.sourceName === quelle.inputName)
+    if (!item) return
+    console.log(`  + "${quelle.inputName}" in "${sceneName}" eingefügt`)
+  }
+
+  await send('SetSceneItemTransform', {
+    sceneName,
+    sceneItemId: item.sceneItemId,
+    sceneItemTransform: {
+      positionX: ziel.x,
+      positionY: ziel.y,
+      // BOUNDS_SCALE_INNER hält das Seitenverhältnis und passt in den Rahmen,
+      // damit ein 16:10-Bildschirm nicht verzerrt ins 16:9-Fenster gequetscht wird.
+      boundsType: 'OBS_BOUNDS_SCALE_INNER',
+      boundsWidth: ziel.width,
+      boundsHeight: ziel.height,
+      alignment: 5, // oben links
+    },
+  })
+  console.log(`  ▣ "${item.sourceName}" → ${ziel.width}×${ziel.height} @ ${ziel.x},${ziel.y}`)
+}
+
 async function placeCameraPip(sceneName) {
   const { sceneItems } = await send('GetSceneItemList', { sceneName })
   const cam = sceneItems.find((i) => /kamera|camera|zv-1/i.test(i.sourceName))
@@ -276,6 +350,27 @@ async function main() {
   for (const c of CARDS) {
     await ensureScene(c.scene, sceneNames)
     await ensureBrowserSource(c.scene, c.source, c.route, c.refresh, inputNames)
+  }
+
+  console.log('\nSendeoberflächen mit mehreren Fenstern:')
+  for (const k of KOMPOSITIONEN) {
+    await ensureScene(k.scene, sceneNames)
+    if (!sceneNames.includes(k.scene)) sceneNames.push(k.scene)
+    await ensureBrowserSource(k.scene, k.source, k.route, true, inputNames)
+    if (DRY) continue
+    for (const platz of k.layout) {
+      await platziere(k.scene, platz.suche, platz.ziel, platz.optional)
+    }
+    // Das Overlay zeichnet die Rahmen und muss deshalb über allem liegen
+    await raiseToTop(k.scene, k.source)
+  }
+
+  console.log('\nSegment-Bumper:')
+  for (const b of BUMPER) {
+    const scene = `BUMPER ${b}`
+    await ensureScene(scene, sceneNames)
+    if (!sceneNames.includes(scene)) sceneNames.push(scene)
+    await ensureBrowserSource(scene, `BOP Bumper · ${b}`, `/bumper/${b}`, true, inputNames)
   }
 
   if (!DRY) {

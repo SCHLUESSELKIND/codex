@@ -28,7 +28,8 @@ const ONLY = args.only ?? null
 const EPISODE = args.episode ?? '001'
 const OUT = resolve(process.cwd(), 'export')
 
-const THUMB_TEMPLATES = ['live-build', 'news', 'test', 'talk', 'signal']
+// Muss zu src/data/thumbnails.ts passen.
+const THUMB_TEMPLATES = ['challenge', 'news', 'fails', 'test', 'talk', 'signal']
 
 const JOBS = [
   { group: 'channel', name: `bop-banner-2560x1440`, url: '/yt/banner', w: 2560, h: 1440 },

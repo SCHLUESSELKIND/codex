@@ -32,6 +32,9 @@ const OUT_DIR = flags.out ?? 'obs-check'
 // Nur Szenen ohne Kamera und ohne Bildschirmfreigabe
 const SAFE_SCENES = [
   '01 Standby',
+  '12 fAILs',
+  'BUMPER fails',
+  'BUMPER build',
   '05 Themenkarte',
   '06 Kernaussage',
   '07 Pause',

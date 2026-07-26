@@ -18,14 +18,15 @@ const TONE: Record<string, string> = {
   red: 'var(--live-red)',
   light: 'var(--text-primary)',
   orange: 'var(--signal-orange)',
+  yellow: 'var(--seg-fails)',
 }
 
 export function Thumbnail() {
   const { template } = useParams<{ template: string }>()
   const [params] = useSearchParams()
 
-  const key = (template ?? 'live-build') as ThumbTemplate
-  const config = THUMB_TEMPLATES[key] ?? THUMB_TEMPLATES['live-build']
+  const key = (template ?? 'challenge') as ThumbTemplate
+  const config = THUMB_TEMPLATES[key] ?? THUMB_TEMPLATES.challenge
 
   const headline = params.get('headline') ?? config.headline
   const marker = params.get('marker') ?? config.marker
@@ -96,17 +97,39 @@ export function Thumbnail() {
             bei etwa 320 px Breite noch als Punkt erkennbar sein, deshalb
             deutlich größer als reine Typo-Logik verlangen würde. */}
         <span style={{ width: 26, height: 30, background: tone, display: 'block' }} />
+        {/* fAILs behält seine Schreibweise, sonst geht der Wortwitz verloren */}
         <span
           style={{
             font: '900 30px var(--font-ui)',
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
+            letterSpacing: marker === 'fAILs' ? '-0.01em' : '0.2em',
+            textTransform: marker === 'fAILs' ? 'none' : 'uppercase',
+            fontSize: marker === 'fAILs' ? 40 : 30,
             color: tone,
           }}
         >
           {marker}
         </span>
       </div>
+
+      {/* Zeitplakette: nur bei der Challenge, trägt die 45 Minuten ins Vorschaubild */}
+      {config.zeit && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 56,
+            top: 48,
+            background: 'var(--live-red)',
+            color: '#0a0202',
+            padding: '10px 18px',
+            font: '900 44px var(--font-ui)',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '-0.02em',
+            lineHeight: 1,
+          }}
+        >
+          {config.zeit}
+        </div>
+      )}
 
       {/* Headline */}
       {/* Textblock optisch mittig zwischen Marker und Fußzeile: kurze Headlines

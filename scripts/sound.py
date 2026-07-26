@@ -302,6 +302,74 @@ def saturate_tanh(buf, drive=1.2, bias=0.15):
     return [(math.tanh(drive * (v + bias)) - k) for v in buf]
 
 
+def limiter(L, R, ceiling, lookahead_ms=4.0, release_ms=80.0):
+    """
+    Spitzenbegrenzer mit Vorausschau, gekoppelt ueber beide Kanaele.
+    WARUM ueberhaupt noetig: die Bausteine treffen sich bei t=0 alle gleichzeitig,
+    dadurch hat der Sting einen Crest von 16 dB. Auf Zielpegel -14 LUFS wuerde die
+    Datei clippen. Der Bus-Kompressor darf laut Vorgabe nur 3 dB und hat 8 ms
+    Attack, laesst also genau den Einschwingvorgang durch. Diese letzten Dezibel
+    fangt der Begrenzer ab.
+    WARUM gekoppelt: einseitige Begrenzung wuerde das Stereobild bei jedem Impuls
+    verziehen, und die Datei muss mono zusammenklappbar bleiben.
+    WARUM Vorausschau statt schnellem Attack: die Verstaerkung faehrt ueber 8 ms
+    weich herunter. Ein harter Eingriff auf einem 55-Hz-Sub, dessen Periode 18 ms
+    dauert, waere hoerbare Verzerrung statt Begrenzung.
+    """
+    n = len(L)
+    la = max(1, ms(lookahead_ms))
+    req = [0.0] * n
+    for i in range(n):
+        p = abs(L[i])
+        q = abs(R[i])
+        if q > p:
+            p = q
+        req[i] = 1.0 if p <= ceiling else ceiling / p
+    if min(req) >= 1.0:
+        return L, R, 0.0
+
+    # Gleitendes Minimum ueber ein symmetrisches Fenster, danach ein gleitender
+    # Mittelwert ueber das halbe Fenster. Das Ergebnis bleibt nachweislich unter
+    # dem geforderten Wert und ist trotzdem stufenlos.
+    from collections import deque
+    dq = deque()
+    mn = [1.0] * n
+    for i in range(n + la):
+        if i < n:
+            while dq and req[dq[-1]] >= req[i]:
+                dq.pop()
+            dq.append(i)
+        c = i - la
+        if c >= 0:
+            while dq[0] < c - la:
+                dq.popleft()
+            mn[c] = req[dq[0]]
+    half = max(1, la // 2)
+    win = 2 * half + 1
+    cs = [0.0] * (n + 1)
+    for i in range(n):
+        cs[i + 1] = cs[i] + mn[i]
+    sm = [1.0] * n
+    for i in range(n):
+        a = max(0, i - half)
+        b = min(n, i + half + 1)
+        sm[i] = (cs[b] - cs[a]) / (b - a) if b > a else mn[i]
+        if sm[i] > mn[i]:
+            sm[i] = mn[i]
+    # Langsame Rueckkehr, damit die Verstaerkung nicht im Takt der Wellenform
+    # atmet. Das Minimum schuetzt die Decke weiterhin.
+    rel = 1.0 - math.exp(-1.0 / (release_ms * 0.001 * SR))
+    g = 1.0
+    for i in range(n):
+        cand = g + (1.0 - g) * rel
+        if cand > sm[i]:
+            cand = sm[i]
+        g = cand
+        L[i] *= g
+        R[i] *= g
+    return L, R, -20.0 * math.log10(max(1e-9, min(sm)))
+
+
 def compressor(buf, ratio=2.0, attack_ms=8.0, release_ms=120.0, max_gr_db=3.0,
                headroom_db=6.0):
     """
@@ -559,7 +627,8 @@ def tone(table, freq, peak_db, attack_ms, decay_ms, hold_ms=0.0):
     n = ms(attack_ms + hold_ms + decay_ms)
     osc = sine(freq, n) if table is None else wavetable(table, freq, n)
     e = env_ahd(n, attack_ms, hold_ms, decay_ms)
-    return tail_fade([o * x for o, x in zip(osc, e)], 8.0)
+    g = db(peak_db)
+    return tail_fade([o * x * g for o, x in zip(osc, e)], 8.0)
 
 
 # ---------------------------------------------------------------------------
@@ -1109,25 +1178,31 @@ SIGNALE = [
 ]
 
 
-def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=4):
-    """Schreibt, misst mit ffmpeg gegen und korrigiert, bis der Wert steht."""
-    report = None
+def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=8):
+    """
+    Schreibt, misst mit ffmpeg gegen, korrigiert, bis beide Werte stehen.
+    Zwei getrennte Stellschrauben, sonst schaukelt sich die Schleife auf:
+    die Decke des Begrenzers regelt den True Peak, die Verstaerkung die Lautheit.
+    """
+    ceiling = db(tp_limit - 0.6)   # Startwert, Zwischenwertspitzen brauchen Luft
+    report, gr = None, 0.0
     for _ in range(rounds):
-        write_wav24(path, [v * gain for v in L], [v * gain for v in R])
+        a = [v * gain for v in L]
+        b = [v * gain for v in R]
+        a, b, gr = limiter(a, b, ceiling)
+        write_wav24(path, a, b)
         m = measure_ffmpeg(path)
         report = m
         if m["I"] is None:
             break
-        corr = 0.0
+        if m["tp"] is not None and m["tp"] > tp_limit - 0.05:
+            ceiling *= db(tp_limit - 0.2 - m["tp"])
+            continue
         if abs(m["I"] - target_lufs) > 0.3:
-            corr = target_lufs - m["I"]
-        if m["tp"] is not None and m["tp"] + corr > tp_limit:
-            # True Peak schlaegt Lautheit. Lieber 1 dB leiser als ein Knacken.
-            corr = tp_limit - m["tp"]
-        if abs(corr) < 0.15:
-            break
-        gain *= db(corr)
-    return gain, report
+            gain *= db(target_lufs - m["I"])
+            continue
+        break
+    return gain, report, gr
 
 
 def main():
@@ -1145,39 +1220,39 @@ def main():
         side = ms_ratio(L, R)
         pre = lufs_integrated(L, R)
         g0 = db(target - pre) if pre > -70 else 1.0
-        if peak * g0 > 0.98:
-            g0 = 0.98 / peak
 
         wav = os.path.join(OUT_DIR, name + ".wav")
-        g, m = gain_write_verify(L, R, wav, target, tp_limit, g0)
+        g, m, gr = gain_write_verify(L, R, wav, target, tp_limit, g0)
         make_mp3(wav, os.path.join(OUT_DIR, name + ".mp3"))
+        mp3 = measure_ffmpeg(os.path.join(OUT_DIR, name + ".mp3"))
 
-        # Zusatzsatz: alles auf -16 LUFS, True Peak -1 dBTP. Das ist die
-        # Referenzfassung fuer Toms uebrige Produktionen, NICHT die Sendefassung.
+        # Zusatzsatz: alles auf -16 LUFS, True Peak -1 dBTP. Referenzfassung nach
+        # der Hausnorm, NICHT die Sendefassung. Die Sendefassung folgt der
+        # Pegel-Hierarchie, sonst waere eine Warnung so laut wie das Logo.
         nwav = os.path.join(NORM_DIR, name + ".wav")
-        gain_write_verify(L, R, nwav, -16.0, -1.0, db(-16.0 - pre) if pre > -70 else 1.0)
+        gain_write_verify(L, R, nwav, -16.0, -1.0,
+                          db(-16.0 - pre) if pre > -70 else 1.0)
         make_mp3(nwav, os.path.join(NORM_DIR, name + ".mp3"))
 
-        first = max(abs(L[0] * g), abs(R[0] * g))
-        last = max(abs(L[-1] * g), abs(R[-1] * g))
         rows.append({
             "name": name, "target": target, "m": m, "dc": dc, "side": side,
-            "peak_db": 20 * math.log10(max(1e-12, peak * g)),
-            "edge": max(first, last), "probe": probe(wav),
+            "gr": gr, "mp3tp": mp3["tp"], "probe": probe(wav),
         })
 
-    print("\n%-24s %7s %7s %7s %7s %7s %6s %s" % (
-        "Datei", "Ziel", "LUFS-I", "TP dBTP", "Peak", "S/M", "Rand", "Stream"))
+    print("\n%-24s %7s %8s %8s %8s %6s %6s %7s %s" % (
+        "Datei", "Ziel", "LUFS-I", "TP dBTP", "MP3 TP", "Limit", "S/M", "DC",
+        "Stream"))
     ok = True
     for r in rows:
         m = r["m"]
         I = m["I"] if m and m["I"] is not None else float("nan")
         tp = m["tp"] if m and m["tp"] is not None else float("nan")
-        bad = (abs(I - r["target"]) > 0.6) or (tp > -1.4) or (r["edge"] > 1e-6) \
-            or (abs(r["dc"]) > 1e-5) or (r["side"] > 0.30)
+        mtp = r["mp3tp"] if r["mp3tp"] is not None else float("nan")
+        bad = (abs(I - r["target"]) > 0.6) or (tp > -1.4) or (mtp > -0.5) \
+            or (abs(r["dc"]) > 1e-5) or (r["side"] > 0.30) or (r["gr"] > 6.0)
         ok = ok and not bad
-        print("%-24s %7.1f %7.1f %7.1f %7.1f %7.3f %6.0e %s%s" % (
-            r["name"], r["target"], I, tp, r["peak_db"], r["side"], r["edge"],
+        print("%-24s %7.1f %8.1f %8.1f %8.1f %6.1f %6.3f %7.0e %s%s" % (
+            r["name"], r["target"], I, tp, mtp, r["gr"], r["side"], abs(r["dc"]),
             r["probe"], "   <-- PRUEFEN" if bad else ""))
     print("\nAlle Werte im Rahmen." if ok else "\nAbweichungen oben markiert.")
     return 0 if ok else 1
