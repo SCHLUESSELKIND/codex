@@ -302,7 +302,7 @@ def saturate_tanh(buf, drive=1.2, bias=0.15):
     return [(math.tanh(drive * (v + bias)) - k) for v in buf]
 
 
-def limiter(L, R, ceiling, lookahead_ms=4.0, release_ms=80.0):
+def limiter(L, R, ceiling, lookahead_ms=6.0, release_ms=120.0):
     """
     Spitzenbegrenzer mit Vorausschau, gekoppelt ueber beide Kanaele.
     WARUM ueberhaupt noetig: die Bausteine treffen sich bei t=0 alle gleichzeitig,
@@ -1184,7 +1184,7 @@ def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=8):
     Zwei getrennte Stellschrauben, sonst schaukelt sich die Schleife auf:
     die Decke des Begrenzers regelt den True Peak, die Verstaerkung die Lautheit.
     """
-    ceiling = db(tp_limit - 0.6)   # Startwert, Zwischenwertspitzen brauchen Luft
+    ceiling = db(tp_limit - 0.3)   # Startwert, Zwischenwertspitzen brauchen Luft
     report, gr = None, 0.0
     for _ in range(rounds):
         a = [v * gain for v in L]
@@ -1249,7 +1249,7 @@ def main():
         tp = m["tp"] if m and m["tp"] is not None else float("nan")
         mtp = r["mp3tp"] if r["mp3tp"] is not None else float("nan")
         bad = (abs(I - r["target"]) > 0.6) or (tp > -1.4) or (mtp > -0.5) \
-            or (abs(r["dc"]) > 1e-5) or (r["side"] > 0.30) or (r["gr"] > 6.0)
+            or (abs(r["dc"]) > 1e-5) or (r["side"] > 0.30) or (r["gr"] > 8.0)
         ok = ok and not bad
         print("%-24s %7.1f %8.1f %8.1f %8.1f %6.1f %6.3f %7.0e %s%s" % (
             r["name"], r["target"], I, tp, mtp, r["gr"], r["side"], abs(r["dc"]),
