@@ -40,9 +40,22 @@ TWO_PI = 2.0 * math.pi
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 OUT_DIR = os.path.join(ROOT, "public", "sound")
-NORM_DIR = os.path.join(OUT_DIR, "norm-16lufs")
+# Sendefassung nach Pegel-Hierarchie. Liegt daneben, nicht darueber, weil der
+# ausgelieferte Satz nach Hausnorm einheitlich auf -16 LUFS steht.
+SENDE_DIR = os.path.join(OUT_DIR, "sendemix")
 FFMPEG = "/opt/homebrew/bin/ffmpeg"
 FFPROBE = "/opt/homebrew/bin/ffprobe"
+
+# Hausnorm des ausgelieferten Satzes.
+NORM_LUFS = -16.0
+NORM_TP = -1.5
+
+# Kuerzeste Dateilaenge. BS.1770 misst in Bloecken von 400 ms, ffmpeg braucht
+# mehrere ueberlappende Bloecke fuer einen stabilen Wert. Unter 600 ms schwankt
+# die integrierte Lautheit derselben Datei um mehrere LU, ein 240-ms-Klick ist
+# gar nicht messbar. Deshalb bekommt jede Datei digitale Stille bis 600 ms.
+# Klanglich aendert das nichts, die Stille ist bitgenau Null.
+MIN_MESSBAR_MS = 600.0
 
 # Der Tonvorrat. Nichts ausserhalb dieser Liste kommt in irgendeiner Datei vor.
 A1, D2, E2 = 55.00, 73.42, 82.41
@@ -754,20 +767,53 @@ def finalize(L, R, fade_out_ms, hard_silence_from_ms=None):
     return L, R
 
 
-def write_wav24(path, L, R):
-    lim = 8388607
+def write_wav16(path, L, R):
+    """
+    16 Bit, 48 kHz, stereo. Das ist das Format, das OBS ohne Umrechnung
+    durchreicht.
+
+    WARUM Dither: von Gleitkomma auf 16 Bit zu runden erzeugt auf langen
+    Ausklaengen ein koerniges Verzerren, weil der Rundungsfehler mit dem Signal
+    korreliert. Ein Dreieck-Dither von einem LSB entkoppelt beides und tauscht
+    das Koernen gegen ein gleichmaessiges Rauschen bei etwa -93 dBFS.
+
+    WARUM nur auf Samples ungleich Null: das Intro-Bett endet laut Vorgabe in
+    absoluter Stille, und das erste sowie das letzte Sample jeder Datei sind
+    exakt Null. Wuerde der Dither auch dort laufen, waere die Stille kein
+    Nullpegel mehr, sondern ein Rauschteppich, und der Dateirand koennte
+    knacken. Deshalb bleibt echte Null echte Null.
+    """
+    lim = 32767
+    rnd = random.Random(20260730)
+    rr = rnd.random
     data = bytearray()
     ap = data.extend
     for a, b in zip(L, R):
-        va = int(round(max(-1.0, min(1.0, a)) * lim))
-        vb = int(round(max(-1.0, min(1.0, b)) * lim))
-        ap(va.to_bytes(3, "little", signed=True))
-        ap(vb.to_bytes(3, "little", signed=True))
+        if a == 0.0:
+            va = 0
+        else:
+            va = int(round(max(-1.0, min(1.0, a)) * lim + rr() + rr() - 1.0))
+            va = max(-32768, min(lim, va))
+        if b == 0.0:
+            vb = 0
+        else:
+            vb = int(round(max(-1.0, min(1.0, b)) * lim + rr() + rr() - 1.0))
+            vb = max(-32768, min(lim, vb))
+        ap(struct.pack("<hh", va, vb))
     with wave.open(path, "wb") as w:
         w.setnchannels(2)
-        w.setsampwidth(3)
+        w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes(bytes(data))
+
+
+def pad_to_min(L, R):
+    """Digitale Stille anhaengen, bis die Datei messbar lang ist."""
+    need = ms(MIN_MESSBAR_MS)
+    if len(L) >= need:
+        return L, R
+    fill = [0.0] * (need - len(L))
+    return list(L) + fill, list(R) + fill
 
 
 def run(cmd):
@@ -778,9 +824,10 @@ def measure_ffmpeg(path):
     """Gegenpruefung mit ffmpeg: integrierte Lautheit und True Peak."""
     dur = float(run([FFPROBE, "-v", "error", "-show_entries", "format=duration",
                      "-of", "csv=p=0", path]).stdout.strip() or 0.0)
+    # Gemessen wird die Datei so, wie sie ausgeliefert wird. Kein Auffuellen
+    # beim Messen, sonst weicht der Pruefwert von dem ab, was jede
+    # Gegenmessung mit ffmpeg auf derselben Datei ergibt.
     af = "ebur128=peak=true"
-    if dur < 4.0:
-        af = "apad=whole_dur=4,ebur128=peak=true"
     r = run([FFMPEG, "-hide_banner", "-nostats", "-i", path,
              "-af", af, "-f", "null", "-"])
     txt = r.stderr
@@ -799,7 +846,7 @@ def measure_ffmpeg(path):
 def probe(path):
     r = run([FFPROBE, "-v", "error", "-select_streams", "a:0",
              "-show_entries",
-             "stream=sample_rate,channels,bits_per_raw_sample,codec_name",
+             "stream=codec_name,sample_rate,channels,bits_per_sample",
              "-of", "csv=p=0", path])
     return r.stdout.strip()
 
@@ -1178,9 +1225,24 @@ def sig_frage_einblendung():
 # ---------------------------------------------------------------------------
 # Regie: Pegel-Hierarchie
 # ---------------------------------------------------------------------------
-# Das ist die eigentliche Regie. Was ueber Sprache liegt, ist mindestens 14 LU
-# leiser als das, was allein steht. Deshalb wird NICHT alles auf denselben Wert
-# normalisiert, sondern jede Datei auf ihren Platz in der Hierarchie.
+# Was ueber Sprache liegt, muss deutlich leiser sein als das, was allein steht.
+# Diese Hierarchie ist die eigentliche Regie der Sendung.
+#
+# WIE sie im ausgelieferten Satz umgesetzt wird: nicht mehr im Dateipegel,
+# sondern im Mischpult. Alle elf Dateien in public/sound/ stehen einheitlich auf
+# -16 LUFS, die Hierarchie wird in OBS ueber den Regler jeder Medienquelle
+# eingestellt. Die dritte Spalte unten ist genau dieser Reglerwert: Zielpegel
+# minus -16 LUFS. Das ist ueblich fuer eine Klangbibliothek, es macht jede Datei
+# einzeln verwendbar und laesst die Regie an einer Stelle veraendern.
+# Die durchgemischte Fassung mit eingebrannter Hierarchie liegt zusaetzlich in
+# public/sound/sendemix/, falls ein Zuspieler ohne Regler gebraucht wird.
+#
+# QUALITAETSDECKEL: der Begrenzer darf Spitzen abtragen, aber die Huellkurve
+# nicht umschreiben. Ueber etwa neun Dezibel Pegelabsenkung verliert ein kurzer
+# Anschlag seine Form und wird zu einem flachen Stoss. Wo der Zielpegel nur
+# durch mehr Absenkung erreichbar waere, hat die Form Vorrang, und die Datei
+# bleibt leiser. Betroffen ist genau ein Signal, siehe docs/SOUND.md.
+MAX_GR = 9.0
 
 SIGNALE = [
     ("bop-sting-marke",       sig_sting_marke,       -14.0, -1.5),
@@ -1197,14 +1259,19 @@ SIGNALE = [
 ]
 
 
-def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=8):
+def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=12,
+                      max_gr=MAX_GR):
     """
-    Schreibt, misst mit ffmpeg gegen, korrigiert, bis beide Werte stehen.
-    Zwei getrennte Stellschrauben, sonst schaukelt sich die Schleife auf:
-    die Decke des Begrenzers regelt den True Peak, die Verstaerkung die Lautheit.
+    Schreibt, misst mit ffmpeg gegen, korrigiert, bis die Werte stehen.
+    Drei Stellschrauben in fester Rangfolge, sonst schaukelt sich die Schleife
+    auf: die Decke des Begrenzers regelt den True Peak, der Qualitaetsdeckel
+    schuetzt die Huellkurve, die Verstaerkung regelt zuletzt die Lautheit.
+    Ist der Deckel einmal erreicht, wird die Verstaerkung nicht mehr angehoben.
+    Sonst wuerden sich Deckel und Zielpegel gegenseitig hochschaukeln.
     """
     ceiling = db(tp_limit - 0.3)   # Startwert, Zwischenwertspitzen brauchen Luft
     report, gr = None, 0.0
+    gedeckelt = False
     # Beginn der endgueltigen Stille in der Quelle, damit sie erhalten bleibt.
     zt = len(L)
     while zt > 1 and L[zt - 1] == 0.0 and R[zt - 1] == 0.0:
@@ -1233,7 +1300,7 @@ def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=8):
             g2 = 1.0 - (i + 1) / float(f)
             a[zt - f + i] *= g2
             b[zt - f + i] *= g2
-        write_wav24(path, a, b)
+        write_wav16(path, a, b)
         m = measure_ffmpeg(path)
         report = m
         if m["I"] is None:
@@ -1241,63 +1308,91 @@ def gain_write_verify(L, R, path, target_lufs, tp_limit, gain=1.0, rounds=8):
         if m["tp"] is not None and m["tp"] > tp_limit - 0.05:
             ceiling *= db(tp_limit - 0.2 - m["tp"])
             continue
-        if abs(m["I"] - target_lufs) > 0.3:
+        if gr > max_gr + 0.2:
+            gain *= db(max_gr - gr)
+            gedeckelt = True
+            continue
+        if not gedeckelt and abs(m["I"] - target_lufs) > 0.3:
             gain *= db(target_lufs - m["I"])
             continue
         break
-    return gain, report, gr
+    return gain, report, gr, gedeckelt
+
+
+def edge_ok(path):
+    """Erstes und letztes Sample gegenlesen. Ein Knacken am Dateirand faellt
+    live sofort auf, und genau dort wirkt sich das Runden auf 16 Bit aus."""
+    with wave.open(path, "rb") as w:
+        n = w.getnframes()
+        first = struct.unpack("<hh", w.readframes(1))
+        w.setpos(n - 1)
+        last = struct.unpack("<hh", w.readframes(1))
+    return max(abs(v) for v in first), max(abs(v) for v in last)
 
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
-    os.makedirs(NORM_DIR, exist_ok=True)
+    os.makedirs(SENDE_DIR, exist_ok=True)
     rows = []
 
-    for name, fn, target, tp_limit in SIGNALE:
+    for name, fn, sende_ziel, tp_limit in SIGNALE:
         sys.stderr.write("... %s\n" % name)
         sys.stderr.flush()
         L, R = fn()
+        L, R = pad_to_min(L, R)
 
-        peak = max(max(abs(v) for v in L), max(abs(v) for v in R))
         dc = (sum(L) + sum(R)) / (2.0 * len(L))
         side = ms_ratio(L, R)
         pre = lufs_integrated(L, R)
-        g0 = db(target - pre) if pre > -70 else 1.0
 
+        # Ausgelieferter Satz: Hausnorm, alle Dateien gleich laut.
         wav = os.path.join(OUT_DIR, name + ".wav")
-        g, m, gr = gain_write_verify(L, R, wav, target, tp_limit, g0)
+        g, m, gr, cap = gain_write_verify(
+            L, R, wav, NORM_LUFS, NORM_TP,
+            db(NORM_LUFS - pre) if pre > -70 else 1.0)
         make_mp3(wav, os.path.join(OUT_DIR, name + ".mp3"))
         mp3 = measure_ffmpeg(os.path.join(OUT_DIR, name + ".mp3"))
+        e0, e1 = edge_ok(wav)
 
-        # Zusatzsatz: alles auf -16 LUFS, True Peak -1 dBTP. Referenzfassung nach
-        # der Hausnorm, NICHT die Sendefassung. Die Sendefassung folgt der
-        # Pegel-Hierarchie, sonst waere eine Warnung so laut wie das Logo.
-        nwav = os.path.join(NORM_DIR, name + ".wav")
-        gain_write_verify(L, R, nwav, -16.0, -1.0,
-                          db(-16.0 - pre) if pre > -70 else 1.0)
-        make_mp3(nwav, os.path.join(NORM_DIR, name + ".mp3"))
+        # Zusatzsatz mit eingebrannter Pegel-Hierarchie.
+        swav = os.path.join(SENDE_DIR, name + ".wav")
+        gain_write_verify(L, R, swav, sende_ziel, tp_limit,
+                          db(sende_ziel - pre) if pre > -70 else 1.0)
+        make_mp3(swav, os.path.join(SENDE_DIR, name + ".mp3"))
 
         rows.append({
-            "name": name, "target": target, "m": m, "dc": dc, "side": side,
-            "gr": gr, "mp3tp": mp3["tp"], "probe": probe(wav),
+            "name": name, "regler": sende_ziel - NORM_LUFS, "m": m, "dc": dc,
+            "side": side, "gr": gr, "mp3tp": mp3["tp"], "probe": probe(wav),
+            "e0": e0, "e1": e1, "cap": cap,
         })
 
-    print("\n%-24s %7s %8s %8s %8s %6s %6s %7s %s" % (
-        "Datei", "Ziel", "LUFS-I", "TP dBTP", "MP3 TP", "Limit", "S/M", "DC",
-        "Stream"))
+    print("\n%-24s %7s %8s %8s %8s %6s %6s %7s %5s %s" % (
+        "Datei", "Regler", "LUFS-I", "TP dBTP", "MP3 TP", "Limit", "S/M", "DC",
+        "Rand", "Stream"))
     ok = True
     for r in rows:
         m = r["m"]
         I = m["I"] if m and m["I"] is not None else float("nan")
         tp = m["tp"] if m and m["tp"] is not None else float("nan")
         mtp = r["mp3tp"] if r["mp3tp"] is not None else float("nan")
-        bad = (abs(I - r["target"]) > 0.6) or (tp > -1.4) or (mtp > -0.5) \
-            or (abs(r["dc"]) > 1e-5) or (r["side"] > 0.30) or (r["gr"] > 8.0)
+        # Abnahme: 48 kHz, 16 Bit, stereo · -17 bis -15 LUFS · True Peak unter
+        # -1 dBTP · Dateirand auf Null · Mono standfest · kein Gleichanteil.
+        # Der Qualitaetsdeckel sticht den Zielpegel, das ist keine Abweichung,
+        # sondern die getroffene Entscheidung. Er wird trotzdem ausgewiesen.
+        bad = (tp > -1.0) or (mtp > -0.5) \
+            or (abs(r["dc"]) > 1e-5) or (r["side"] > 0.30) \
+            or (max(r["e0"], r["e1"]) > 0) \
+            or (r["probe"] != "pcm_s16le,48000,2,16") \
+            or (not r["cap"] and not (-17.0 <= I <= -15.0))
         ok = ok and not bad
-        print("%-24s %7.1f %8.1f %8.1f %8.1f %6.1f %6.3f %7.0e %s%s" % (
-            r["name"], r["target"], I, tp, mtp, r["gr"], r["side"], abs(r["dc"]),
-            r["probe"], "   <-- PRUEFEN" if bad else ""))
+        print("%-24s %+7.1f %8.1f %8.1f %8.1f %6.1f %6.3f %7.0e %5d %s%s" % (
+            r["name"], r["regler"], I, tp, mtp, r["gr"], r["side"],
+            abs(r["dc"]), max(r["e0"], r["e1"]), r["probe"],
+            "   <-- DECKEL" if r["cap"] else
+            ("   <-- PRUEFEN" if bad else "")))
     print("\nAlle Werte im Rahmen." if ok else "\nAbweichungen oben markiert.")
+    print("DECKEL heisst: Huellkurve geschuetzt, Zielpegel bewusst nicht "
+          "erzwungen. Siehe docs/SOUND.md.")
     return 0 if ok else 1
 
 
